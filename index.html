@@ -11,7 +11,12 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Poppins', sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -19,6 +24,7 @@
             color: #333;
             overflow-x: hidden;
         }
+
         .container {
             max-width: 420px;
             margin: 0 auto;
@@ -27,6 +33,7 @@
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.1);
         }
+
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
@@ -35,184 +42,535 @@
             position: relative;
             overflow: hidden;
         }
+
         .header::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="80" cy="80" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="40" cy="60" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
         }
-        .user-info { position: relative; z-index: 2; }
+
+        .user-info {
+            position: relative;
+            z-index: 2;
+        }
+
         .user-avatar {
-            width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 10px;
-            background: #fff; display: flex; align-items: center; justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
+
         .balance-section {
-            display: flex; justify-content: space-between; margin: 15px 0; gap: 10px;
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            gap: 10px;
         }
+
         .balance-card {
-            flex: 1; background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
-            padding: 12px; border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.3);
+            flex: 1;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
         }
-        .balance-amount { font-size: 18px; font-weight: 600; margin-bottom: 4px; }
-        .balance-label { font-size: 12px; opacity: 0.9; }
-        .character-section { padding: 20px; text-align: center; }
+
+        .balance-amount {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .character-section {
+            padding: 20px;
+            text-align: center;
+        }
+
         .character-card {
             background: linear-gradient(145deg, #f0f0f0, #ffffff);
-            border-radius: 20px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-            position: relative; overflow: hidden;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
         }
+
         .character-card::before {
-            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
             background: linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.1) 50%, transparent 51%);
             animation: shimmer 3s infinite;
         }
-        @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
         .character-image {
-            width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 15px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
             background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex; align-items: center; justify-content: center;
-            position: relative; z-index: 2; box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
-        .character-stats { margin: 20px 0; }
+
+        .character-stats {
+            margin: 20px 0;
+        }
+
         .stat-item {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 10px 0; border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
         }
+
         .upgrade-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;
-            padding: 15px 30px; border-radius: 25px; font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
-        .upgrade-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6); }
-        .upgrade-btn:active { transform: translateY(0); }
+
+        .upgrade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .upgrade-btn:active {
+            transform: translateY(0);
+        }
+
         .navigation {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-            width: 100%; max-width: 420px; background: #fff; border-top: 1px solid #eee;
-            display: flex; box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
         }
+
         .nav-item {
-            flex: 1; padding: 12px; text-align: center; cursor: pointer; transition: all 0.3s ease;
-            border: none; background: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
         }
-        .nav-item.active { color: #667eea; background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1)); }
-        .nav-item:hover { background: #f8f9ff; }
-        .nav-icon { font-size: 20px; }
-        .nav-label { font-size: 11px; font-weight: 500; }
-        .page { display: none; padding: 20px; padding-bottom: 80px; }
-        .page.active { display: block; }
+
+        .nav-item.active {
+            color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .nav-item:hover {
+            background: #f8f9ff;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
         .shop-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
         }
+
         .shop-item {
             background: linear-gradient(145deg, #f0f0f0, #ffffff);
-            border-radius: 15px; padding: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            transition: all 0.3s ease; cursor: pointer;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
         }
-        .shop-item:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+
+        .shop-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
         .shop-item-image {
-            width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #667eea, #764ba2);
-            margin: 0 auto 10px; display: flex; align-items: center; justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        .shop-item-image img, .task-icon img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .task-list { margin-top: 20px; }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
         .task-item {
-            background: #fff; border-radius: 12px; padding: 15px; margin-bottom: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 15px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
             transition: all 0.3s ease;
         }
-        .task-item:hover { transform: translateX(5px); box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
         .task-icon {
-            width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, #667eea, #764ba2);
-            display: flex; align-items: center; justify-content: center; color: white; font-size: 24px;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
         }
-        .task-content { flex: 1; }
-        .task-title { font-weight: 600; margin-bottom: 4px; }
-        .task-reward { color: #667eea; font-size: 14px; font-weight: 500; }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .task-reward {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
         .task-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
-            padding: 8px 16px; border-radius: 20px; font-size: 14px; cursor: pointer; transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .task-btn:hover { background: linear-gradient(135deg, #5a6fd8, #6a42a6); }
-        .task-btn:disabled { background: #ccc; cursor: not-allowed; }
+
+        .task-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a42a6);
+        }
+
+        .task-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
         .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
-            display: none; align-items: center; justify-content: center; z-index: 1000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
         }
-        .modal.active { display: flex; }
+
+        .modal.active {
+            display: flex;
+        }
+
         .modal-content {
-            background: #fff; padding: 30px; border-radius: 20px; max-width: 300px; width: 90%;
-            text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            background: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 300px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
         }
-        .modal-title { font-size: 24px; font-weight: 600; margin-bottom: 15px; color: #333; }
-        .modal-text { margin-bottom: 20px; color: #666; line-height: 1.6; }
-        .modal-buttons { display: flex; gap: 10px; }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal-text {
+            margin-bottom: 20px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
         .modal-btn {
-            flex: 1; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: 500; transition: all 0.3s ease;
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
         }
-        .modal-btn.primary { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
-        .modal-btn.secondary { background: #f0f0f0; color: #333; }
-        .wallet-section { margin: 20px 0; }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .wallet-section {
+            margin: 20px 0;
+        }
+
         .wallet-card {
             background: linear-gradient(145deg, #f0f0f0, #ffffff);
-            border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
+
         .connect-wallet-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none;
-            padding: 15px; border-radius: 12px; width: 100%; font-size: 16px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
+
         .amount-input {
-            width: 100%; padding: 15px; border: 2px solid #e0e0e0; border-radius: 12px;
-            font-size: 16px; margin: 10px 0; transition: border-color 0.3s ease;
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: border-color 0.3s ease;
         }
-        .amount-input:focus { outline: none; border-color: #667eea; }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
         .action-buttons {
-            display: flex; gap: 10px; margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
         }
+
         .action-btn {
-            flex: 1; padding: 12px; border: none; border-radius: 8px; font-weight: 600;
-            cursor: pointer; transition: all 0.3s ease;
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .deposit-btn { background: linear-gradient(135deg, #4CAF50, #45a049); color: white; }
-        .withdraw-btn { background: linear-gradient(135deg, #ff6b6b, #ee5a52); color: white; }
-        .referral-section { margin: 20px 0; }
+
+        .deposit-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .withdraw-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .referral-section {
+            margin: 20px 0;
+        }
+
         .referral-card {
-            background: linear-gradient(145deg, #f0f8ff, #e6f3ff); border-radius: 15px; padding: 20px;
-            text-align: center; border: 2px solid #667eea;
+            background: linear-gradient(145deg, #f0f8ff, #e6f3ff);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #667eea;
         }
+
         .referral-code {
-            background: #667eea; color: white; padding: 10px 15px; border-radius: 8px;
-            font-family: monospace; font-size: 16px; margin: 10px 0; cursor: pointer; transition: all 0.3s ease;
-            word-break: break-all; /* Ensure long URLs wrap */
+            background: #667eea;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
-        .referral-code:hover { background: #5a6fd8; }
+
+        .referral-code:hover {
+            background: #5a6fd8;
+        }
+
         .earnings-card {
-            background: #fff; border-radius: 12px; padding: 15px; margin: 10px 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .loading { display: flex; align-items: center; justify-content: center; padding: 40px; }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
         .spinner {
-            width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea;
-            border-radius: 50%; animation: spin 1s linear infinite;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         .history-item {
-            background: #fff; border-radius: 10px; padding: 15px; margin: 10px 0;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center;
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
         .history-type {
-            padding: 4px 8px; border-radius: 15px; font-size: 12px; font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
         }
-        .history-type.deposit { background: #e8f5e8; color: #4CAF50; }
-        .history-type.withdraw { background: #ffebee; color: #f44336; }
-        .history-type.task { background: #e3f2fd; color: #2196F3; }
-        .history-type.purchase { background: #fff3e0; color: #ff9800; } /* New for character purchases */
+
+        .history-type.deposit {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .history-type.withdraw {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .history-type.task {
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+
         @media (max-width: 768px) {
-            .container { max-width: 100%; }
-            .shop-grid { grid-template-columns: repeat(2, 1fr); }
-            .balance-section { flex-direction: column; gap: 8px; }
-            .action-buttons { flex-direction: column; }
+            .container {
+                max-width: 100%;
+            }
+
+            .shop-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .balance-section {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -231,7 +589,7 @@
                         <div class="balance-label">TON</div>
                     </div>
                     <div class="balance-card">
-                        <div class="balance-amount" id="city-balance">0</div>
+                        <div class="balance-amount" id="city-balance">10</div>
                         <div class="balance-label">TON City</div>
                     </div>
                 </div>
@@ -243,10 +601,9 @@
             <div class="character-section">
                 <div class="character-card">
                     <div class="character-image">
-                        <img id="current-character-img" src="" alt="Current Character" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
-                        <span class="material-icons" style="font-size: 60px; color: white; display: none;">person</span>
+                        <span class="material-icons" style="font-size: 60px; color: white;">person</span>
                     </div>
-                    <h3 id="current-character-name">Default Character</h3>
+                    <h3>Default Character</h3>
                     <div class="character-stats">
                         <div class="stat-item">
                             <span>Level</span>
@@ -254,16 +611,16 @@
                         </div>
                         <div class="stat-item">
                             <span>Income/Hour</span>
-                            <span id="character-income">0.000 TON</span>
+                            <span id="character-income">0.001 TON</span>
                         </div>
                         <div class="stat-item">
                             <span>Upgrade Cost</span>
-                            <span id="upgrade-cost">0.000 TON</span>
+                            <span id="upgrade-cost">0.1 TON</span>
                         </div>
                     </div>
                     <button class="upgrade-btn" onclick="goToShop()">
                         <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">upgrade</span>
-                        Upgrade/Buy Character
+                        Upgrade Me
                     </button>
                 </div>
             </div>
@@ -297,7 +654,7 @@
                     <h3>Invite Friends & Earn!</h3>
                     <p>Get 5% bonus from each friend's deposit</p>
                     <div class="referral-code" id="referral-link" onclick="copyReferralLink()">
-                        Loading referral link...
+                        https://t.me/Toncitypaybot/app?start=<span id="user-id">123456</span>
                     </div>
                     <p>Tap to copy link</p>
                 </div>
@@ -325,25 +682,21 @@
                         <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">account_balance_wallet</span>
                         Connect TON Wallet
                     </button>
-                    <button id="disconnect-btn" class="connect-wallet-btn" onclick="disconnectWallet()" style="display: none; background: #ff6b6b; margin-top: 10px;">
-                        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">power_settings_new</span>
-                        Disconnect Wallet
-                    </button>
                     
                     <div style="margin-top: 20px;">
-                        <input type="number" id="amount-input" class="amount-input" placeholder="Enter TON amount" step="0.000001">
+                        <input type="number" id="amount-input" class="amount-input" placeholder="Enter TON amount" step="0.001">
                         <div class="action-buttons">
                             <button class="action-btn deposit-btn" onclick="depositTON()">
-                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">upload</span>
-                                Deposit TON
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">add</span>
+                                Deposit
                             </button>
                             <button class="action-btn withdraw-btn" onclick="withdrawTON()">
-                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">download</span>
-                                Withdraw TON
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">remove</span>
+                                Withdraw
                             </button>
                         </div>
                         <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                            Minimum withdrawal: 5000 City TON (0.005 TON)
+                            Minimum withdrawal: 5000 City TON (0.05 TON)
                         </p>
                     </div>
                 </div>
@@ -398,17 +751,17 @@
 
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
-        import { getDatabase, ref, set, get, push, onValue, child, remove, update } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+        import { getDatabase, ref, set, get, push, onValue, child, remove } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
 
-        // Firebase configuration - REPLACE WITH YOUR ACTUAL CONFIG
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_AUTH_DOMAIN",
-            databaseURL: "YOUR_DATABASE_URL",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_STORAGE_BUCKET",
-            messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyB26BfGLzH2zvicRCbHPyCsOXr2Hwym1fs",
+            authDomain: "pxfx-block-chain.firebaseapp.com",
+            databaseURL: "https://pxfx-block-chain-default-rtdb.firebaseio.com",
+            projectId: "pxfx-block-chain",
+            storageBucket: "pxfx-block-chain.firebasestorage.app",
+            messagingSenderId: "14103598672",
+            appId: "1:14103598672:web:5476f52de8d53b07f92355"
         };
 
         // Initialize Firebase
@@ -418,40 +771,78 @@
         // Global variables
         let currentUser = null;
         let tonConnectUI = null;
-        let userBalance = { ton: 0, cityTon: 0 }; // Start with 0 City TON for initial setup
-        let userCharacter = { level: 1, income: 0.000, upgradeCost: 0.01, name: "Basic Citizen", iconUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" }; // Default character
+        let userBalance = { ton: 0, cityTon: 10 };
+        let userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1 };
         let isInitialized = false;
-        const TON_TO_NANOTON = 1_000_000_000; // 1 TON = 1,000,000,000 Nanotons
-        const CITY_TON_TO_TON = 1000; // 1000 City TON = 1 TON
 
-        // Placeholder for Telegram Web App
+        // Initialize Telegram Web App
         let tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
             tg.expand();
             currentUser = tg.initDataUnsafe?.user;
-        }
-
-        // --- Initialization ---
-        async function initializeAppLogic() {
-            if (isInitialized) return;
-            isInitialized = true;
-
-            // Initialize TON Connect UI
-            initTonConnect();
-
-            // Determine user and initialize data
             if (currentUser) {
+                console.log('Telegram user detected:', currentUser);
                 document.getElementById('user-name').textContent = currentUser.first_name || 'User';
                 document.getElementById('user-id').textContent = currentUser.id;
-                await initializeUserData();
+                initializeUser();
+            }
+        } else {
+            // Fallback for testing
+            currentUser = { id: 123456, first_name: 'Test User' };
+            console.log('Using fallback user for testing');
+            document.getElementById('user-name').textContent = 'Test User';
+            document.getElementById('user-id').textContent = '123456';
+            initializeUser();
+        }
+
+        // Initialize TON Connect
+        function initTonConnect() {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: window.location.origin + '/tonconnect-manifest.json',
+                buttonRootId: 'ton-connect'
+            });
+
+            tonConnectUI.setOptions({
+                actionsConfiguration: {
+                    twaReturnUrl: 'https://t.me/Toncitypaybot/app'
+                }
+            });
+        }
+
+        // Initialize user data
+        async function initializeUser() {
+            if (isInitialized) return;
+            isInitialized = true;
+            
+            console.log('Initializing user:', currentUser);
+            
+            if (!currentUser) return;
+
+            const userRef = ref(database, `users/${currentUser.id}`);
+            const snapshot = await get(userRef);
+            
+            if (!snapshot.exists()) {
+                // Create new user
+                const newUser = {
+                    id: currentUser.id,
+                    name: currentUser.first_name || 'User',
+                    username: currentUser.username || '',
+                    balance: { ton: 0, cityTon: 10 },
+                    character: userCharacter,
+                    joinDate: Date.now(),
+                    referrals: [],
+                    totalEarned: 0
+                };
+                await set(userRef, newUser);
+                userBalance = newUser.balance;
+                console.log('New user created with balance:', userBalance);
             } else {
-                // Fallback for testing if not in Telegram Web App
-                console.warn("Not running in Telegram Web App. Using fallback user.");
-                currentUser = { id: 123456, first_name: 'Test User', username: 'testuser' };
-                document.getElementById('user-name').textContent = 'Test User';
-                document.getElementById('user-id').textContent = '123456';
-                await initializeUserData();
+                // Load existing user data
+                const userData = snapshot.val();
+                userBalance = userData.balance || userBalance;
+                userCharacter = userData.character || userCharacter;
+                console.log('Existing user loaded with balance:', userBalance);
             }
 
             updateUI();
@@ -459,117 +850,18 @@
             loadCharacters();
             loadHistory();
             startEarningTimer();
-            setTimeout(showWelcomeMessage, 1500); // Show welcome message after a short delay
-        }
-
-        // Initialize TON Connect
-        function initTonConnect() {
-            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                // IMPORTANT: Replace with your actual app URL and manifest file location.
-                // The manifest should be hosted on your web server.
-                manifestUrl: window.location.origin + '/tonconnect-manifest.json', 
-                buttonRootId: 'ton-connect'
-            });
-
-            tonConnectUI.onStatusChange(async (wallet) => {
-                console.log('TON Connect status changed:', wallet);
-                if (wallet) {
-                    document.getElementById('connect-btn').style.display = 'none';
-                    document.getElementById('disconnect-btn').style.display = 'block';
-                    // Optionally, update UI with wallet address if needed
-                    // document.getElementById('wallet-address').textContent = wallet.account.address;
-                    await updateUserData(); // Ensure user data is synced
-                } else {
-                    document.getElementById('connect-btn').style.display = 'block';
-                    document.getElementById('disconnect-btn').style.display = 'none';
-                    // document.getElementById('wallet-address').textContent = '';
-                }
-            });
-
-            // Configure TWA return URL
-            tonConnectUI.setOptions({
-                actionsConfiguration: {
-                    twaReturnUrl: `https://t.me/${tg?.initDataUnsafe?.bot?.username || 'your_bot_username'}/app`
-                }
-            });
-        }
-
-        // Initialize or load user data from Firebase
-        async function initializeUserData() {
-            if (!currentUser) return;
-
-            const userRef = ref(database, `users/${currentUser.id}`);
-            const snapshot = await get(userRef);
-
-            if (!snapshot.exists()) {
-                // Create new user with initial balance and default character
-                const initialCityTon = 10; // Give some starting City TON
-                const newUser = {
-                    id: currentUser.id,
-                    name: currentUser.first_name || 'User',
-                    username: currentUser.username || '',
-                    balance: { ton: 0, cityTon: initialCityTon },
-                    character: { ...userCharacter }, // Copy default character
-                    joinDate: Date.now(),
-                    referrals: [], // Initialize empty
-                    totalEarned: 0, // Initialize earnings
-                    referralCode: generateReferralCode(currentUser.id), // Generate a referral code
-                    referredBy: null, // To track who referred this user
-                    lastIncomeUpdate: Date.now() // For income calculations
-                };
-                await set(userRef, newUser);
-                userBalance = newUser.balance;
-                userCharacter = newUser.character;
-                console.log('New user created:', newUser);
-            } else {
-                // Load existing user data
-                const userData = snapshot.val();
-                userBalance = userData.balance || { ton: 0, cityTon: 0 };
-                userCharacter = userData.character || { ...userCharacter };
-                
-                // Update referral code if it doesn't exist
-                if (!userData.referralCode) {
-                    await update(userRef, { referralCode: generateReferralCode(currentUser.id) });
-                }
-                // Ensure character has default values if missing
-                if (!userCharacter.level) userCharacter.level = 1;
-                if (!userCharacter.income) userCharacter.income = 0.000;
-                if (!userCharacter.upgradeCost) userCharacter.upgradeCost = 0.01;
-                if (!userCharacter.name) userCharacter.name = "Basic Citizen";
-                if (!userCharacter.iconUrl) userCharacter.iconUrl = "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D";
-
-                console.log('Existing user loaded:', userData);
-            }
-            updateReferralLink();
+            showWelcomeMessage();
+            initTonConnect();
         }
 
         // Update UI with current data
         function updateUI() {
             document.getElementById('ton-balance').textContent = userBalance.ton.toFixed(3);
             document.getElementById('city-balance').textContent = userBalance.cityTon.toLocaleString();
-            
-            // Update character display
-            document.getElementById('current-character-img').src = userCharacter.iconUrl;
-            document.getElementById('current-character-img').style.display = userCharacter.iconUrl ? 'block' : 'none';
-            document.querySelector('.character-image .material-icons').style.display = userCharacter.iconUrl ? 'none' : 'block';
-            document.getElementById('current-character-name').textContent = userCharacter.name;
             document.getElementById('character-level').textContent = userCharacter.level;
             document.getElementById('character-income').textContent = `${userCharacter.income.toFixed(3)} TON`;
             document.getElementById('upgrade-cost').textContent = `${userCharacter.upgradeCost.toFixed(3)} TON`;
             
-            // Update referral stats
-            if (currentUser && currentUser.id) {
-                const userRef = ref(database, `users/${currentUser.id}`);
-                get(userRef).then(snapshot => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        document.getElementById('total-referrals').textContent = data.referrals ? data.referrals.length : 0;
-                        // Note: Referral earnings calculation would need backend support for true accuracy
-                        document.getElementById('referral-earnings').textContent = `${(data.totalEarned || 0).toFixed(3)} TON`;
-                    }
-                });
-            }
-
             console.log('UI updated with:', {
                 tonBalance: userBalance.ton,
                 cityBalance: userBalance.cityTon,
@@ -578,69 +870,46 @@
         }
         
         function showWelcomeMessage() {
-            if (currentUser && !sessionStorage.getItem(`welcome_message_shown_${currentUser.id}`)) {
-                showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received ${10} City TON to get started. Complete tasks and upgrade your character to earn more!`);
-                sessionStorage.setItem(`welcome_message_shown_${currentUser.id}`, 'true');
-            }
+            setTimeout(() => {
+                showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`);
+            }, 1000);
         }
 
         // Start earning timer
         function startEarningTimer() {
             setInterval(async () => {
-                if (!currentUser) return;
-
-                const userRef = ref(database, `users/${currentUser.id}`);
-                const snapshot = await get(userRef);
-
-                if (!snapshot.exists()) return; // User might have been deleted
-
-                const userData = snapshot.val();
-                const lastUpdate = userData.lastIncomeUpdate || Date.now();
-                const now = Date.now();
-                const timeDiffHours = (now - lastUpdate) / (1000 * 60 * 60); // Difference in hours
-
-                if (timeDiffHours > 0 && userData.character && userData.character.income) {
-                    const earnedCityTon = userData.character.income * timeDiffHours * CITY_TON_TO_TON;
-                    const newCityTon = (userData.balance.cityTon || 0) + earnedCityTon;
-                    const updatedBalance = {
-                        ...userData.balance,
-                        cityTon: newCityTon
-                    };
-
-                    await update(userRef, {
-                        balance: updatedBalance,
-                        lastIncomeUpdate: now
-                    });
-
-                    userBalance = updatedBalance; // Update global state immediately for UI
-                    console.log(`Added ${earnedCityTon.toFixed(2)} City TON income. New balance: ${newCityTon.toFixed(2)}`);
-                    updateUI();
-                }
-            }, 60000); // Check every minute for income
+                userBalance.cityTon += userCharacter.income * 1000; // Convert to City TON
+                await updateUserData();
+                console.log('Hourly income added:', userCharacter.income * 1000);
+                updateUI();
+            }, 3600000); // Every hour
         }
 
-        // Generate a unique referral code
-        function generateReferralCode(userId) {
-            return `TC${userId}${Math.random().toString(36).substr(2, 6).toUpperCase()}`;
-        }
-
-        // Update referral link in UI
-        function updateReferralLink() {
+        // Update user data in Firebase
+        async function updateUserData() {
             if (!currentUser) return;
-            const referralLinkElement = document.getElementById('referral-link');
-            const botUsername = tg?.initDataUnsafe?.bot?.username || 'your_bot_username'; // Replace if not available
-            referralLinkElement.innerHTML = `https://t.me/${botUsername}/app?startapp=${currentUser.id}&ref=${currentUser.id}`; // App deep link
+            
+            console.log('Updating user data:', userBalance);
+            const userRef = ref(database, `users/${currentUser.id}`);
+            await set(userRef, {
+                id: currentUser.id,
+                name: currentUser.first_name || 'User',
+                username: currentUser.username || '',
+                balance: userBalance,
+                character: userCharacter,
+                lastUpdate: Date.now()
+            });
         }
 
         // Load tasks from Firebase
         async function loadTasks() {
             console.log('Loading tasks...');
-            const tasksContainer = document.getElementById('tasks-list');
-            tasksContainer.innerHTML = '<div class="loading"><div class="spinner"></div></div>'; // Show loading indicator
             
             const tasksRef = ref(database, 'tasks');
             onValue(tasksRef, (snapshot) => {
+                const tasksContainer = document.getElementById('tasks-list');
                 tasksContainer.innerHTML = '';
+                
                 if (snapshot.exists()) {
                     const tasks = snapshot.val();
                     Object.keys(tasks).forEach(taskId => {
@@ -651,11 +920,8 @@
                     console.log('Tasks loaded:', Object.keys(tasks).length);
                 } else {
                     console.log('No tasks found, creating default tasks...');
-                    createDefaultTasks().then(() => loadTasks()); // Re-call after creation
+                    createDefaultTasks();
                 }
-            }, (error) => {
-                console.error("Error loading tasks:", error);
-                tasksContainer.innerHTML = '<p>Error loading tasks.</p>';
             });
         }
 
@@ -665,14 +931,14 @@
             taskDiv.className = 'task-item';
             taskDiv.innerHTML = `
                 <div class="task-icon">
-                    <img src="${task.iconUrl || 'https://images.unsplash.com/photo-1522199710778-e673319b1594?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}" alt="${task.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <span class="material-icons" style="display: ${task.iconUrl ? 'none' : 'block'};">task_alt</span>
+                    <img src="${task.iconUrl}" alt="${task.title}" style="width: 100%; height: 100%; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="material-icons" style="display: none;">task_alt</span>
                 </div>
                 <div class="task-content">
                     <div class="task-title">${task.title}</div>
                     <div class="task-reward">+${task.reward} City TON</div>
                 </div>
-                <button class="task-btn" onclick="startTask('${taskId}', '${task.url || ''}', ${task.reward})">
+                <button class="task-btn" onclick="startTask('${taskId}', '${task.url}', ${task.reward})">
                     Start
                 </button>
             `;
@@ -682,12 +948,12 @@
         // Load characters from Firebase
         async function loadCharacters() {
             console.log('Loading characters...');
-            const charactersContainer = document.getElementById('characters-grid');
-            charactersContainer.innerHTML = '<div class="loading"><div class="spinner"></div></div>'; // Show loading indicator
             
             const charactersRef = ref(database, 'characters');
             onValue(charactersRef, (snapshot) => {
+                const charactersContainer = document.getElementById('characters-grid');
                 charactersContainer.innerHTML = '';
+                
                 if (snapshot.exists()) {
                     const characters = snapshot.val();
                     Object.keys(characters).forEach(charId => {
@@ -698,11 +964,8 @@
                     console.log('Characters loaded:', Object.keys(characters).length);
                 } else {
                     console.log('No characters found, creating default characters...');
-                    createDefaultCharacters().then(() => loadCharacters()); // Re-call after creation
+                    createDefaultCharacters();
                 }
-            }, (error) => {
-                console.error("Error loading characters:", error);
-                charactersContainer.innerHTML = '<p>Error loading characters.</p>';
             });
         }
 
@@ -713,12 +976,12 @@
             charDiv.onclick = () => purchaseCharacter(charId, character);
             charDiv.innerHTML = `
                 <div class="shop-item-image">
-                    <img src="${character.iconUrl || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D'}" alt="Level ${character.level}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <span class="material-icons" style="display: ${character.iconUrl ? 'none' : 'block'}; color: white;">person</span>
+                    <img src="${character.iconUrl}" alt="Level ${character.level}" style="width: 100%; height: 100%; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="material-icons" style="display: none; color: white;">person</span>
                 </div>
-                <h4>${character.name || `Level ${character.level}`}</h4>
-                <p>${character.price.toFixed(3)} TON</p>
-                <p>+${character.income.toFixed(3)} TON/h</p>
+                <h4>Level ${character.level}</h4>
+                <p>${character.price} TON</p>
+                <p>+${character.income} TON/h</p>
             `;
             return charDiv;
         }
@@ -726,31 +989,25 @@
         // Load transaction history
         async function loadHistory() {
             console.log('Loading transaction history...');
-            if (!currentUser) {
-                document.getElementById('history-list').innerHTML = '<p>Connect wallet to see history.</p>';
-                return;
-            }
             
-            const historyContainer = document.getElementById('history-list');
-            historyContainer.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+            if (!currentUser) return;
             
             const historyRef = ref(database, `users/${currentUser.id}/history`);
             onValue(historyRef, (snapshot) => {
+                const historyContainer = document.getElementById('history-list');
                 historyContainer.innerHTML = '';
+                
                 if (snapshot.exists()) {
                     const history = snapshot.val();
-                    // Display last 10 transactions, sorted by timestamp descending
-                    Object.entries(history).reverse().slice(0, 10).forEach(([histId, transaction]) => {
+                    Object.keys(history).reverse().slice(0, 10).forEach(histId => {
+                        const transaction = history[histId];
                         const histElement = createHistoryElement(transaction);
                         historyContainer.appendChild(histElement);
                     });
                     console.log('History loaded:', Object.keys(history).length, 'transactions');
                 } else {
-                    historyContainer.innerHTML = '<p>No transaction history yet.</p>';
+                    historyContainer.innerHTML = '<p>No transaction history</p>';
                 }
-            }, (error) => {
-                console.error("Error loading history:", error);
-                historyContainer.innerHTML = '<p>Error loading history.</p>';
             });
         }
 
@@ -758,23 +1015,13 @@
         function createHistoryElement(transaction) {
             const histDiv = document.createElement('div');
             histDiv.className = 'history-item';
-            const timestamp = transaction.timestamp ? new Date(transaction.timestamp) : new Date();
-            const formattedTimestamp = `${timestamp.toLocaleDateString()} ${timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
-            
-            let currencySymbol = '';
-            switch(transaction.currency) {
-                case 'TON': currencySymbol = 'TON'; break;
-                case 'City TON': currencySymbol = 'City TON'; break;
-                default: currencySymbol = transaction.currency;
-            }
-
             histDiv.innerHTML = `
                 <div>
-                    <div style="font-weight: 600;">${transaction.type ? transaction.type.toUpperCase() : 'UNKNOWN'}</div>
-                    <div style="font-size: 12px; color: #666;">${formattedTimestamp}</div>
+                    <div style="font-weight: 600;">${transaction.type.toUpperCase()}</div>
+                    <div style="font-size: 12px; color: #666;">${new Date(transaction.timestamp).toLocaleDateString()}</div>
                 </div>
                 <div>
-                    <span class="history-type ${transaction.type}">${transaction.amount} ${currencySymbol}</span>
+                    <span class="history-type ${transaction.type}">${transaction.amount} ${transaction.currency}</span>
                 </div>
             `;
             return histDiv;
@@ -787,33 +1034,30 @@
                     title: "Join TON City Telegram",
                     description: "Join our official Telegram channel",
                     reward: 50,
-                    iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/100px-Telegram_logo.svg.png",
-                    url: tg?.initDataUnsafe?.bot?.username ? `https://t.me/${tg.initDataUnsafe.bot.username}` : "https://t.me/toncity_official" // Fallback link
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://t.me/Toncitypaybot"
                 },
                 {
-                    title: "Follow on X (Twitter)",
-                    description: "Follow our X account for updates",
+                    title: "Follow on Twitter",
+                    description: "Follow our Twitter account for updates",
                     reward: 30,
-                    iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/X_logo_2023.svg/100px-X_logo_2023.svg.png",
-                    url: "https://twitter.com/your_twitter_handle" // Replace with actual handle
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://twitter.com"
                 },
                 {
                     title: "Share with Friends",
                     description: "Share TON City with your friends",
                     reward: 25,
-                    iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/Google_Forms_logo.svg/100px-Google_Forms_logo.svg.png", // Placeholder icon
-                    url: "" // This task is handled via referral link
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://t.me/share/url?url=https://t.me/Toncitypaybot/app"
                 }
             ];
 
             const tasksRef = ref(database, 'tasks');
-            const existingTasksSnapshot = await get(tasksRef);
-            if (!existingTasksSnapshot.exists()) {
-                for (const task of defaultTasks) {
-                    await push(tasksRef, task);
-                }
-                console.log('Default tasks created');
+            for (const task of defaultTasks) {
+                await push(tasksRef, task);
             }
+            console.log('Default tasks created');
         }
 
         // Create default characters if none exist
@@ -821,48 +1065,50 @@
             const defaultCharacters = [
                 {
                     level: 2,
-                    name: "Town Planner",
                     price: 0.1,
                     income: 0.002,
-                    iconUrl: "https://images.unsplash.com/photo-1615789591457-74a63395c990?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    iconUrl: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 },
                 {
                     level: 3,
-                    name: "Community Manager",
                     price: 0.25,
                     income: 0.005,
-                    iconUrl: "https://images.unsplash.com/photo-1600486913747-825f4a5024e1?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    iconUrl: "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 },
                 {
                     level: 4,
-                    name: "City Developer",
                     price: 0.5,
                     income: 0.01,
-                    iconUrl: "https://images.unsplash.com/photo-1521737711867-e3b97375f902?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    iconUrl: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 },
                 {
                     level: 5,
-                    name: "Mayor",
                     price: 1.0,
                     income: 0.02,
-                    iconUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=1974&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    iconUrl: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 }
             ];
 
             const charactersRef = ref(database, 'characters');
-            const existingCharsSnapshot = await get(charactersRef);
-            if (!existingCharsSnapshot.exists()) {
-                for (const character of defaultCharacters) {
-                    await push(charactersRef, character);
-                }
-                console.log('Default characters created');
+            for (const character of defaultCharacters) {
+                await push(charactersRef, character);
             }
+            console.log('Default characters created');
         }
 
-        // --- UI Navigation and Interactions ---
+        // Global functions for UI interactions
         window.showPage = function(pageId, navItem) {
-            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected page and activate nav item
             document.getElementById(pageId).classList.add('active');
             navItem.classList.add('active');
         };
@@ -871,219 +1117,180 @@
             showPage('shop-page', document.querySelectorAll('.nav-item')[1]);
         };
 
-        // --- Wallet Connection and Transactions ---
         window.connectToWallet = async function() {
             try {
+                console.log('Connecting to wallet...');
                 if (!tonConnectUI) {
-                    showModal("Error", "TON Connect UI not initialized.");
-                    return;
+                    initTonConnect();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 await tonConnectUI.openModal();
             } catch (error) {
-                console.error("Error opening wallet modal:", error);
-                showModal("Connection Error", "Failed to open wallet connection. Please ensure you have a compatible wallet installed.");
+                console.error("Error connecting to wallet:", error);
+                showModal("Connection Error", "Failed to connect to wallet. Please try again.");
             }
         };
 
-        window.disconnectWallet = async function() {
-            try {
-                if (tonConnectUI?.connectedWallet()) {
-                    await tonConnectUI.disconnect();
-                    showModal("Wallet Disconnected", "You have been disconnected from your TON wallet.");
-                }
-            } catch (error) {
-                console.error("Error disconnecting wallet:", error);
-                showModal("Disconnection Error", "Failed to disconnect wallet.");
-            }
-        };
-
-        window.depositTON = async function() {
-            if (!tonConnectUI?.connectedWallet()) {
-                showModal("Wallet Not Connected", "Please connect your TON wallet first.");
-                return;
-            }
-
-            const amountInput = document.getElementById('amount-input');
-            const amount = parseFloat(amountInput.value);
-
-            if (isNaN(amount) || amount <= 0) {
-                showModal("Invalid Amount", "Please enter a valid positive amount to deposit.");
-                return;
-            }
-
-            // In a real app, you would NOT do this here. You need a backend to verify.
-            // This is a simulation for demonstration.
-            const depositAmountNano = amount * TON_TO_NANOTON;
-            const transaction = {
-                validUntil: Math.floor(Date.now() / 1000) + 60, // 60 seconds validity
-                messages: [{
-                    address: "EQABa48hjKzg09hN_HjxOic7r8T1PleIy1dRd8NvZ3922MP0", // Replace with your TON City contract address or a safe escrow address
-                    amount: depositAmountNano.toString()
-                }]
-            };
-
-            try {
-                await tonConnectUI.sendTransaction(transaction);
-                console.log('Deposit transaction sent. Waiting for confirmation...');
-                // For demonstration, we directly update balance.
-                // In production: Wait for blockchain confirmation via a backend service.
-                
-                // Adding to history BEFORE confirmation is risky for production
-                await addTransactionToHistory('deposit', amount, 'TON');
-
-                // Simulate confirmation and balance update
-                setTimeout(async () => {
-                    userBalance.ton += amount;
-                    await updateUserData();
-                    updateUI();
-                    amountInput.value = '';
-                    showModal("Deposit Successful", `${amount.toFixed(3)} TON has been added to your balance.`);
-                }, 5000); // Simulate confirmation delay
-
-            } catch (error) {
-                console.error("Deposit transaction failed:", error);
-                showModal("Deposit Failed", `Transaction failed: ${error.message || 'Please try again.'}`);
-            }
-        };
-
-        window.withdrawTON = async function() {
-            if (!tonConnectUI?.connectedWallet()) {
-                showModal("Wallet Not Connected", "Please connect your TON wallet first.");
-                return;
-            }
-
-            const amountInput = document.getElementById('amount-input');
-            const tonAmountToWithdraw = parseFloat(amountInput.value);
-            const cityTonAmountToWithdraw = tonAmountToWithdraw * CITY_TON_TO_TON;
-            const minWithdrawalCityTon = 5000; // 0.005 TON
-
-            if (isNaN(tonAmountToWithdraw) || tonAmountToWithdraw <= 0) {
-                showModal("Invalid Amount", "Please enter a valid positive amount of TON to withdraw.");
-                return;
-            }
-
-            if (cityTonAmountToWithdraw < minWithdrawalCityTon) {
-                showModal("Withdrawal Error", `Minimum withdrawal is ${minWithdrawalCityTon / CITY_TON_TO_TON} TON (${minWithdrawalCityTon} City TON).`);
-                return;
-            }
-
-            if (userBalance.cityTon < cityTonAmountToWithdraw) {
-                showModal("Insufficient Balance", `You have ${userBalance.cityTon.toLocaleString()} City TON, but need ${cityTonAmountToWithdraw.toLocaleString()} for this withdrawal.`);
-                return;
-            }
-
-            const confirm = await showConfirmModal("Confirm Withdrawal", `Withdraw ${tonAmountToWithdraw.toFixed(3)} TON (${cityTonAmountToWithdraw.toLocaleString()} City TON)?`);
-            if (!confirm) return;
-
-            // Simulate withdrawal: deduct City TON, record in history
-            userBalance.cityTon -= cityTonAmountToWithdraw;
-            await addTransactionToHistory('withdraw', tonAmountToWithdraw, 'TON'); // Record the TON amount
-            await updateUserData();
-            updateUI();
-            amountInput.value = '';
-            showModal("Withdrawal Initiated", `Your withdrawal of ${tonAmountToWithdraw.toFixed(3)} TON has been processed. It may take some time to appear in your wallet.`);
-        };
-
-        // --- Task and Character Interactions ---
         window.startTask = async function(taskId, url, reward) {
-            console.log('Starting task:', taskId);
-            const taskBtn = event.target;
-            taskBtn.disabled = true;
-            taskBtn.textContent = 'In Progress...';
-
+            console.log('Starting task:', taskId, 'with reward:', reward);
+            
+            // Open task URL
             if (url && url !== '') {
                 window.open(url, '_blank');
             }
             
-            // Simulate task completion after a delay
+            // Wait 3 seconds then complete task
             setTimeout(async () => {
-                if (!currentUser) return;
+                console.log('Completing task and adding reward:', reward);
+                userBalance.cityTon += reward;
+                await updateUserData();
                 
-                const taskRef = ref(database, `users/${currentUser.id}`);
-                const snapshot = await get(taskRef);
-                if (!snapshot.exists()) return;
-
-                const userData = snapshot.val();
-                const currentCityTon = userData.balance?.cityTon || 0;
-                const newCityTon = currentCityTon + reward;
-
-                await update(taskRef, {
-                    balance: { ...userData.balance, cityTon: newCityTon },
-                    lastIncomeUpdate: Date.now() // Reset timer for fair gameplay
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'task',
+                    amount: reward,
+                    currency: 'City TON',
+                    timestamp: Date.now()
                 });
-                userBalance.cityTon = newCityTon; // Update global state
-                await addTransactionToHistory('task', reward, 'City TON');
+                
                 updateUI();
-
-                taskBtn.textContent = 'Completed';
-                taskBtn.disabled = true; // Keep disabled after completion
                 showModal("Task Completed!", `You earned ${reward} City TON!`);
-            }, 5000); // 5 second delay to simulate task work
+            }, 3000);
         };
 
         window.purchaseCharacter = async function(charId, character) {
-            if (!currentUser) {
-                showModal("Not Logged In", "Please start the bot in Telegram to continue.");
-                return;
-            }
+            console.log('Attempting to purchase character:', character);
+            
             if (userBalance.ton < character.price) {
-                showModal("Insufficient Balance", `You need ${character.price.toFixed(3)} TON to purchase this character, but you only have ${userBalance.ton.toFixed(3)} TON.`);
+                showModal("Insufficient Balance", "You don't have enough TON to purchase this character.");
                 return;
             }
             
-            const confirm = await showConfirmModal("Purchase Character", `Buy "${character.name || `Level ${character.level}`}" for ${character.price.toFixed(3)} TON?`);
-            if (!confirm) return;
-
-            console.log('Purchase confirmed, updating character and balance');
-            userBalance.ton -= character.price;
-            userCharacter = {
-                level: character.level,
-                name: character.name,
-                income: character.income,
-                upgradeCost: character.price * 1.5, // Simple logic for next upgrade cost
-                iconUrl: character.iconUrl
-            };
-            
-            await updateUserData();
-            await addTransactionToHistory('purchase', character.price, 'TON', character.name);
-            updateUI();
-            showModal("Purchase Successful!", `You now own "${character.name || `Level ${character.level}`}"!`);
+            const confirmPurchase = await showConfirmModal("Purchase Character", `Buy Level ${character.level} character for ${character.price} TON?`);
+            if (confirmPurchase) {
+                console.log('Purchase confirmed, updating character and balance');
+                userBalance.ton -= character.price;
+                userCharacter = {
+                    level: character.level,
+                    income: character.income,
+                    upgradeCost: character.price * 1.5
+                };
+                
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'purchase',
+                    amount: character.price,
+                    currency: 'TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                showModal("Purchase Successful!", `You now own a Level ${character.level} character!`);
+            }
         };
 
-        // --- Utility Functions ---
-        async function updateUserData() {
-            if (!currentUser) return;
+        window.depositTON = async function() {
+            console.log('Attempting TON deposit...');
             
-            const userRef = ref(database, `users/${currentUser.id}`);
-            await set(userRef, {
-                id: currentUser.id,
-                name: currentUser.first_name || 'User',
-                username: currentUser.username || '',
-                balance: userBalance,
-                character: userCharacter,
-                referrals: userCharacter.referrals || [], // Ensure referrals is always an array
-                totalEarned: userCharacter.totalEarned || 0, // Ensure totalEarned exists
-                referralCode: currentUser.referralCode, // Keep existing referral code
-                referredBy: currentUser.referredBy || null, // Keep existing referredBy
-                lastIncomeUpdate: userCharacter.lastIncomeUpdate || Date.now(), // Ensure last income update is preserved
-                lastUpdate: Date.now() // General update timestamp
-            });
-            console.log('User data updated in Firebase.');
-        }
+            const amount = parseFloat(document.getElementById('amount-input').value);
+            if (!amount || amount <= 0) {
+                showModal("Invalid Amount", "Please enter a valid amount to deposit.");
+                return;
+            }
+            
+            try {
+                console.log('Checking wallet connection...');
+                if (!tonConnectUI?.wallet) {
+                    showModal("Wallet Not Connected", "Please connect your wallet first.");
+                    return;
+                }
+                
+                const transaction = {
+                    validUntil: Math.floor(Date.now() / 1000) + 60,
+                    messages: [{
+                        address: "EQABa48hjKzg09hN_HjxOic7r8T1PleIy1dRd8NvZ3922MP0",
+                        amount: (amount * 1000000000).toString() // Convert to nanotons
+                    }]
+                };
+                
+                await tonConnectUI.sendTransaction(transaction);
+                console.log('Transaction sent successfully');
+                
+                // Update balance (in real app, verify transaction first)
+                userBalance.ton += amount;
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'deposit',
+                    amount: amount,
+                    currency: 'TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                document.getElementById('amount-input').value = '';
+                showModal("Deposit Successful!", `${amount} TON has been added to your balance.`);
+                
+            } catch (error) {
+                console.error("Deposit failed:", error);
+                showModal("Deposit Failed", "Transaction was cancelled or failed.");
+            }
+        };
 
-        async function addTransactionToHistory(type, amount, currency, details = '') {
-            if (!currentUser) return;
-            const historyRef = ref(database, `users/${currentUser.id}/history`);
-            await push(historyRef, {
-                type: type,
-                amount: amount,
-                currency: currency,
-                timestamp: Date.now(),
-                details: details // Optional details for clarity
+        window.withdrawTON = async function() {
+            console.log('Attempting TON withdrawal...');
+            
+            const cityTonAmount = parseFloat(document.getElementById('amount-input').value) * 1000; // Convert TON to City TON
+            
+            if (!cityTonAmount || cityTonAmount < 5000) {
+                showModal("Invalid Amount", "Minimum withdrawal is 5000 City TON (0.005 TON).");
+                return;
+            }
+            
+            if (userBalance.cityTon < cityTonAmount) {
+                showModal("Insufficient Balance", "You don't have enough City TON to withdraw.");
+                return;
+            }
+            
+            const tonAmount = cityTonAmount / 1000;
+            const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${tonAmount} TON (${cityTonAmount} City TON)?`);
+            
+            if (confirmWithdraw) {
+                console.log('Withdrawal confirmed, processing...');
+                userBalance.cityTon -= cityTonAmount;
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'withdraw',
+                    amount: tonAmount,
+                    currency: 'TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                document.getElementById('amount-input').value = '';
+                showModal("Withdrawal Requested", `${tonAmount} TON withdrawal has been processed.`);
+            }
+        };
+
+        window.copyReferralLink = function() {
+            console.log('Copying referral link...');
+            const referralLink = document.getElementById('referral-link').textContent;
+            navigator.clipboard.writeText(referralLink).then(() => {
+                showModal("Link Copied!", "Referral link has been copied to clipboard.");
             });
-        }
+        };
 
         window.showModal = function(title, message) {
+            console.log('Showing modal:', title, message);
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-text').textContent = message;
             document.getElementById('modal').classList.add('active');
@@ -1091,16 +1298,14 @@
 
         window.showConfirmModal = function(title, message) {
             return new Promise((resolve) => {
+                console.log('Showing confirm modal:', title, message);
                 document.getElementById('modal-title').textContent = title;
                 document.getElementById('modal-text').textContent = message;
                 document.getElementById('modal-confirm').onclick = () => {
                     closeModal();
                     resolve(true);
                 };
-                // Ensure secondary button is visible and functional
-                const secondaryButton = document.querySelector('.modal-btn.secondary');
-                secondaryButton.style.display = 'block'; // Make sure it's visible
-                secondaryButton.onclick = () => {
+                document.querySelector('.modal-btn.secondary').onclick = () => {
                     closeModal();
                     resolve(false);
                 };
@@ -1109,54 +1314,9 @@
         };
 
         window.closeModal = function() {
+            console.log('Closing modal');
             document.getElementById('modal').classList.remove('active');
-            // Reset modal buttons for next use (important for confirmation modals)
-            document.getElementById('modal-confirm').onclick = closeModal; // Default OK action
-            document.querySelector('.modal-btn.secondary').onclick = closeModal; // Default Cancel action
         };
-        
-        // Handle initial loading and deep linking for referrals
-        document.addEventListener('DOMContentLoaded', () => {
-            // Check for referral code in URL params (e.g., from Telegram deep link)
-            const urlParams = new URLSearchParams(window.location.search);
-            const referredById = urlParams.get('startapp'); // Telegram deep link parameter for user ID
-            const refCode = urlParams.get('ref'); // Custom referral parameter
-
-            if (referredById && refCode && currentUser && currentUser.id != referredById) {
-                // This is a new user who was referred
-                console.log(`User ${currentUser.id} was referred by ${referredById} with code ${refCode}`);
-                // Ensure referredBy is set correctly and add to referrer's referrals list
-                // This part might need a backend for reliable tracking.
-                // For frontend simulation:
-                const referrerRef = ref(database, `users/${referredById}`);
-                get(referrerRef).then(snapshot => {
-                    if (snapshot.exists()) {
-                        const referrerData = snapshot.val();
-                        if (!referrerData.referrals || !referrerData.referrals.includes(currentUser.id.toString())) {
-                            const updatedReferrals = [...(referrerData.referrals || []), currentUser.id.toString()];
-                            update(referrerRef, { referrals: updatedReferrals });
-                            console.log(`Added ${currentUser.id} to referrer ${referredById}'s referrals.`);
-                            // For now, we don't add direct earnings, as it's complex frontend-wise
-                        }
-                    }
-                });
-                // Set the referredBy property for the current user
-                const userRef = ref(database, `users/${currentUser.id}`);
-                update(userRef, { referredBy: referredById.toString(), referralCode: refCode });
-            }
-            
-            // Now initialize the rest of the app logic
-            initializeAppLogic();
-        });
-
-        // Handle Telegram Web App button events (if you add any custom buttons)
-        if (tg) {
-            tg.onEvent('themeChanged', () => {
-                // Apply theme changes if needed
-                console.log('Telegram theme changed');
-            });
-        }
-
     </script>
 </body>
 </html>
