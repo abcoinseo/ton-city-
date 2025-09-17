@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TON City</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            background: #fff;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="20" cy="20" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="80" cy="80" r="1" fill="%23ffffff" opacity="0.1"/><circle cx="40" cy="60" r="1" fill="%23ffffff" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+
+        .user-info {
+            position: relative;
+            z-index: 2;
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .balance-section {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+            gap: 10px;
+        }
+
+        .balance-card {
+            flex: 1;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .balance-amount {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .balance-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .character-section {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .character-card {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .character-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, transparent 49%, rgba(255,255,255,0.1) 50%, transparent 51%);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .character-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .character-stats {
+            margin: 20px 0;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .upgrade-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upgrade-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .upgrade-btn:active {
+            transform: translateY(0);
+        }
+
+        .navigation {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.1);
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            background: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .nav-item:hover {
+            background: #f8f9ff;
+        }
+
+        .nav-icon {
+            font-size: 20px;
+        }
+
+        .nav-label {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .page {
+            display: none;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .shop-item {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .shop-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .shop-item-image {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .task-list {
+            margin-top: 20px;
+        }
+
+        .task-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .task-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+        }
+
+        .task-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .task-content {
+            flex: 1;
+        }
+
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .task-reward {
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .task-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .task-btn:hover {
+            background: linear-gradient(135deg, #5a6fd8, #6a42a6);
+        }
+
+        .task-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 300px;
+            width: 90%;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .modal-text {
+            margin-bottom: 20px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .modal-btn.secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .wallet-section {
+            margin: 20px 0;
+        }
+
+        .wallet-card {
+            background: linear-gradient(145deg, #f0f0f0, #ffffff);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .connect-wallet-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .amount-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            font-size: 16px;
+            margin: 10px 0;
+            transition: border-color 0.3s ease;
+        }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .deposit-btn {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .withdraw-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+        }
+
+        .referral-section {
+            margin: 20px 0;
+        }
+
+        .referral-card {
+            background: linear-gradient(145deg, #f0f8ff, #e6f3ff);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #667eea;
+        }
+
+        .referral-code {
+            background: #667eea;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 16px;
+            margin: 10px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .referral-code:hover {
+            background: #5a6fd8;
+        }
+
+        .earnings-card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .history-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-type {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .history-type.deposit {
+            background: #e8f5e8;
+            color: #4CAF50;
+        }
+
+        .history-type.withdraw {
+            background: #ffebee;
+            color: #f44336;
+        }
+
+        .history-type.task {
+            background: #e3f2fd;
+            color: #2196F3;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                max-width: 100%;
+            }
+
+            .shop-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .balance-section {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="user-info">
+                <div class="user-avatar">
+                    <span class="material-icons" style="font-size: 30px; color: #667eea;">person</span>
+                </div>
+                <div id="user-name">Welcome!</div>
+                <div class="balance-section">
+                    <div class="balance-card">
+                        <div class="balance-amount" id="ton-balance">0.00</div>
+                        <div class="balance-label">TON</div>
+                    </div>
+                    <div class="balance-card">
+                        <div class="balance-amount" id="city-balance">10</div>
+                        <div class="balance-label">TON City</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <div class="character-section">
+                <div class="character-card">
+                    <div class="character-image">
+                        <span class="material-icons" style="font-size: 60px; color: white;">person</span>
+                    </div>
+                    <h3>Default Character</h3>
+                    <div class="character-stats">
+                        <div class="stat-item">
+                            <span>Level</span>
+                            <span id="character-level">1</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Income/Hour</span>
+                            <span id="character-income">0.001 TON</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Upgrade Cost</span>
+                            <span id="upgrade-cost">0.1 TON</span>
+                        </div>
+                    </div>
+                    <button class="upgrade-btn" onclick="goToShop()">
+                        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">upgrade</span>
+                        Upgrade Me
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shop Page -->
+        <div id="shop-page" class="page">
+            <h2>Character Shop</h2>
+            <div class="shop-grid" id="characters-grid">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Page -->
+        <div id="tasks-page" class="page">
+            <h2>Tasks</h2>
+            <div class="task-list" id="tasks-list">
+                <div class="loading">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referral Page -->
+        <div id="referral-page" class="page">
+            <h2>Referral Program</h2>
+            <div class="referral-section">
+                <div class="referral-card">
+                    <h3>Invite Friends & Earn!</h3>
+                    <p>Get 5% bonus from each friend's deposit</p>
+                    <div class="referral-code" id="referral-link" onclick="copyReferralLink()">
+                        https://t.me/Toncitypaybot/app?start=<span id="user-id">123456</span>
+                    </div>
+                    <p>Tap to copy link</p>
+                </div>
+                <div class="earnings-card">
+                    <div>
+                        <div>Total Referrals</div>
+                        <div id="total-referrals">0</div>
+                    </div>
+                    <div>
+                        <div>Earned from Referrals</div>
+                        <div id="referral-earnings">0 TON</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Profile Page -->
+        <div id="profile-page" class="page">
+            <h2>Profile</h2>
+            <div class="wallet-section">
+                <div class="wallet-card">
+                    <h3>Wallet Connection</h3>
+                    <div id="ton-connect"></div>
+                    <button id="connect-btn" class="connect-wallet-btn" onclick="connectToWallet()">
+                        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">account_balance_wallet</span>
+                        Connect TON Wallet
+                    </button>
+                    
+                    <div style="margin-top: 20px;">
+                        <input type="number" id="amount-input" class="amount-input" placeholder="Enter TON amount" step="0.001">
+                        <div class="action-buttons">
+                            <button class="action-btn deposit-btn" onclick="depositTON()">
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">add</span>
+                                Deposit
+                            </button>
+                            <button class="action-btn withdraw-btn" onclick="withdrawTON()">
+                                <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">remove</span>
+                                Withdraw
+                            </button>
+                        </div>
+                        <p style="font-size: 12px; color: #666; margin-top: 10px;">
+                            Minimum withdrawal: 5000 City TON (0.05 TON)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px;">
+                <h3>Transaction History</h3>
+                <div id="history-list">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="navigation">
+            <button class="nav-item active" onclick="showPage('home-page', this)">
+                <span class="material-icons nav-icon">home</span>
+                <span class="nav-label">Home</span>
+            </button>
+            <button class="nav-item" onclick="showPage('shop-page', this)">
+                <span class="material-icons nav-icon">store</span>
+                <span class="nav-label">Shop</span>
+            </button>
+            <button class="nav-item" onclick="showPage('tasks-page', this)">
+                <span class="material-icons nav-icon">task</span>
+                <span class="nav-label">Tasks</span>
+            </button>
+            <button class="nav-item" onclick="showPage('referral-page', this)">
+                <span class="material-icons nav-icon">group_add</span>
+                <span class="nav-label">Referral</span>
+            </button>
+            <button class="nav-item" onclick="showPage('profile-page', this)">
+                <span class="material-icons nav-icon">person</span>
+                <span class="nav-label">Profile</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="modal-title">Title</h3>
+            <p class="modal-text" id="modal-text">Message</p>
+            <div class="modal-buttons">
+                <button class="modal-btn secondary" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn primary" id="modal-confirm" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js';
+        import { getDatabase, ref, set, get, push, onValue, child, remove } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
+
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyB26BfGLzH2zvicRCbHPyCsOXr2Hwym1fs",
+            authDomain: "pxfx-block-chain.firebaseapp.com",
+            databaseURL: "https://pxfx-block-chain-default-rtdb.firebaseio.com",
+            projectId: "pxfx-block-chain",
+            storageBucket: "pxfx-block-chain.firebasestorage.app",
+            messagingSenderId: "14103598672",
+            appId: "1:14103598672:web:5476f52de8d53b07f92355"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        // Global variables
+        let currentUser = null;
+        let tonConnectUI = null;
+        let userBalance = { ton: 0, cityTon: 10 };
+        let userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1 };
+        let isInitialized = false;
+
+        // Initialize Telegram Web App
+        let tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            currentUser = tg.initDataUnsafe?.user;
+            if (currentUser) {
+                console.log('Telegram user detected:', currentUser);
+                document.getElementById('user-name').textContent = currentUser.first_name || 'User';
+                document.getElementById('user-id').textContent = currentUser.id;
+                initializeUser();
+            }
+        } else {
+            // Fallback for testing
+            currentUser = { id: 123456, first_name: 'Test User' };
+            console.log('Using fallback user for testing');
+            document.getElementById('user-name').textContent = 'Test User';
+            document.getElementById('user-id').textContent = '123456';
+            initializeUser();
+        }
+
+        // Initialize TON Connect
+        function initTonConnect() {
+            tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                manifestUrl: window.location.origin + '/tonconnect-manifest.json',
+                buttonRootId: 'ton-connect'
+            });
+
+            tonConnectUI.setOptions({
+                actionsConfiguration: {
+                    twaReturnUrl: 'https://t.me/Toncitypaybot/app'
+                }
+            });
+        }
+
+        // Initialize user data
+        async function initializeUser() {
+            if (isInitialized) return;
+            isInitialized = true;
+            
+            console.log('Initializing user:', currentUser);
+            
+            if (!currentUser) return;
+
+            const userRef = ref(database, `users/${currentUser.id}`);
+            const snapshot = await get(userRef);
+            
+            if (!snapshot.exists()) {
+                // Create new user
+                const newUser = {
+                    id: currentUser.id,
+                    name: currentUser.first_name || 'User',
+                    username: currentUser.username || '',
+                    balance: { ton: 0, cityTon: 10 },
+                    character: userCharacter,
+                    joinDate: Date.now(),
+                    referrals: [],
+                    totalEarned: 0
+                };
+                await set(userRef, newUser);
+                userBalance = newUser.balance;
+                console.log('New user created with balance:', userBalance);
+            } else {
+                // Load existing user data
+                const userData = snapshot.val();
+                userBalance = userData.balance || userBalance;
+                userCharacter = userData.character || userCharacter;
+                console.log('Existing user loaded with balance:', userBalance);
+            }
+
+            updateUI();
+            loadTasks();
+            loadCharacters();
+            loadHistory();
+            startEarningTimer();
+            showWelcomeMessage();
+            initTonConnect();
+        }
+
+        // Update UI with current data
+        function updateUI() {
+            document.getElementById('ton-balance').textContent = userBalance.ton.toFixed(3);
+            document.getElementById('city-balance').textContent = userBalance.cityTon.toLocaleString();
+            document.getElementById('character-level').textContent = userCharacter.level;
+            document.getElementById('character-income').textContent = `${userCharacter.income.toFixed(3)} TON`;
+            document.getElementById('upgrade-cost').textContent = `${userCharacter.upgradeCost.toFixed(3)} TON`;
+            
+            console.log('UI updated with:', {
+                tonBalance: userBalance.ton,
+                cityBalance: userBalance.cityTon,
+                characterLevel: userCharacter.level
+            });
+        }
+        
+        function showWelcomeMessage() {
+            setTimeout(() => {
+                showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`);
+            }, 1000);
+        }
+
+        // Start earning timer
+        function startEarningTimer() {
+            setInterval(async () => {
+                userBalance.cityTon += userCharacter.income * 1000; // Convert to City TON
+                await updateUserData();
+                console.log('Hourly income added:', userCharacter.income * 1000);
+                updateUI();
+            }, 3600000); // Every hour
+        }
+
+        // Update user data in Firebase
+        async function updateUserData() {
+            if (!currentUser) return;
+            
+            console.log('Updating user data:', userBalance);
+            const userRef = ref(database, `users/${currentUser.id}`);
+            await set(userRef, {
+                id: currentUser.id,
+                name: currentUser.first_name || 'User',
+                username: currentUser.username || '',
+                balance: userBalance,
+                character: userCharacter,
+                lastUpdate: Date.now()
+            });
+        }
+
+        // Load tasks from Firebase
+        async function loadTasks() {
+            console.log('Loading tasks...');
+            
+            const tasksRef = ref(database, 'tasks');
+            onValue(tasksRef, (snapshot) => {
+                const tasksContainer = document.getElementById('tasks-list');
+                tasksContainer.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const tasks = snapshot.val();
+                    Object.keys(tasks).forEach(taskId => {
+                        const task = tasks[taskId];
+                        const taskElement = createTaskElement(taskId, task);
+                        tasksContainer.appendChild(taskElement);
+                    });
+                    console.log('Tasks loaded:', Object.keys(tasks).length);
+                } else {
+                    console.log('No tasks found, creating default tasks...');
+                    createDefaultTasks();
+                }
+            });
+        }
+
+        // Create task element
+        function createTaskElement(taskId, task) {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task-item';
+            taskDiv.innerHTML = `
+                <div class="task-icon">
+                    <img src="${task.iconUrl}" alt="${task.title}" style="width: 100%; height: 100%; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="material-icons" style="display: none;">task_alt</span>
+                </div>
+                <div class="task-content">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-reward">+${task.reward} City TON</div>
+                </div>
+                <button class="task-btn" onclick="startTask('${taskId}', '${task.url}', ${task.reward})">
+                    Start
+                </button>
+            `;
+            return taskDiv;
+        }
+
+        // Load characters from Firebase
+        async function loadCharacters() {
+            console.log('Loading characters...');
+            
+            const charactersRef = ref(database, 'characters');
+            onValue(charactersRef, (snapshot) => {
+                const charactersContainer = document.getElementById('characters-grid');
+                charactersContainer.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const characters = snapshot.val();
+                    Object.keys(characters).forEach(charId => {
+                        const character = characters[charId];
+                        const charElement = createCharacterElement(charId, character);
+                        charactersContainer.appendChild(charElement);
+                    });
+                    console.log('Characters loaded:', Object.keys(characters).length);
+                } else {
+                    console.log('No characters found, creating default characters...');
+                    createDefaultCharacters();
+                }
+            });
+        }
+
+        // Create character element
+        function createCharacterElement(charId, character) {
+            const charDiv = document.createElement('div');
+            charDiv.className = 'shop-item';
+            charDiv.onclick = () => purchaseCharacter(charId, character);
+            charDiv.innerHTML = `
+                <div class="shop-item-image">
+                    <img src="${character.iconUrl}" alt="Level ${character.level}" style="width: 100%; height: 100%; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span class="material-icons" style="display: none; color: white;">person</span>
+                </div>
+                <h4>Level ${character.level}</h4>
+                <p>${character.price} TON</p>
+                <p>+${character.income} TON/h</p>
+            `;
+            return charDiv;
+        }
+
+        // Load transaction history
+        async function loadHistory() {
+            console.log('Loading transaction history...');
+            
+            if (!currentUser) return;
+            
+            const historyRef = ref(database, `users/${currentUser.id}/history`);
+            onValue(historyRef, (snapshot) => {
+                const historyContainer = document.getElementById('history-list');
+                historyContainer.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    const history = snapshot.val();
+                    Object.keys(history).reverse().slice(0, 10).forEach(histId => {
+                        const transaction = history[histId];
+                        const histElement = createHistoryElement(transaction);
+                        historyContainer.appendChild(histElement);
+                    });
+                    console.log('History loaded:', Object.keys(history).length, 'transactions');
+                } else {
+                    historyContainer.innerHTML = '<p>No transaction history</p>';
+                }
+            });
+        }
+
+        // Create history element
+        function createHistoryElement(transaction) {
+            const histDiv = document.createElement('div');
+            histDiv.className = 'history-item';
+            histDiv.innerHTML = `
+                <div>
+                    <div style="font-weight: 600;">${transaction.type.toUpperCase()}</div>
+                    <div style="font-size: 12px; color: #666;">${new Date(transaction.timestamp).toLocaleDateString()}</div>
+                </div>
+                <div>
+                    <span class="history-type ${transaction.type}">${transaction.amount} ${transaction.currency}</span>
+                </div>
+            `;
+            return histDiv;
+        }
+
+        // Create default tasks if none exist
+        async function createDefaultTasks() {
+            const defaultTasks = [
+                {
+                    title: "Join TON City Telegram",
+                    description: "Join our official Telegram channel",
+                    reward: 50,
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://t.me/Toncitypaybot"
+                },
+                {
+                    title: "Follow on Twitter",
+                    description: "Follow our Twitter account for updates",
+                    reward: 30,
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://twitter.com"
+                },
+                {
+                    title: "Share with Friends",
+                    description: "Share TON City with your friends",
+                    reward: 25,
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://t.me/share/url?url=https://t.me/Toncitypaybot/app"
+                }
+            ];
+
+            const tasksRef = ref(database, 'tasks');
+            for (const task of defaultTasks) {
+                await push(tasksRef, task);
+            }
+            console.log('Default tasks created');
+        }
+
+        // Create default characters if none exist
+        async function createDefaultCharacters() {
+            const defaultCharacters = [
+                {
+                    level: 2,
+                    price: 0.1,
+                    income: 0.002,
+                    iconUrl: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                },
+                {
+                    level: 3,
+                    price: 0.25,
+                    income: 0.005,
+                    iconUrl: "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                },
+                {
+                    level: 4,
+                    price: 0.5,
+                    income: 0.01,
+                    iconUrl: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                },
+                {
+                    level: 5,
+                    price: 1.0,
+                    income: 0.02,
+                    iconUrl: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                }
+            ];
+
+            const charactersRef = ref(database, 'characters');
+            for (const character of defaultCharacters) {
+                await push(charactersRef, character);
+            }
+            console.log('Default characters created');
+        }
+
+        // Global functions for UI interactions
+        window.showPage = function(pageId, navItem) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Show selected page and activate nav item
+            document.getElementById(pageId).classList.add('active');
+            navItem.classList.add('active');
+        };
+
+        window.goToShop = function() {
+            showPage('shop-page', document.querySelectorAll('.nav-item')[1]);
+        };
+
+        window.connectToWallet = async function() {
+            try {
+                console.log('Connecting to wallet...');
+                if (!tonConnectUI) {
+                    initTonConnect();
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                }
+                await tonConnectUI.openModal();
+            } catch (error) {
+                console.error("Error connecting to wallet:", error);
+                showModal("Connection Error", "Failed to connect to wallet. Please try again.");
+            }
+        };
+
+        window.startTask = async function(taskId, url, reward) {
+            console.log('Starting task:', taskId, 'with reward:', reward);
+            
+            // Open task URL
+            if (url && url !== '') {
+                window.open(url, '_blank');
+            }
+            
+            // Wait 3 seconds then complete task
+            setTimeout(async () => {
+                console.log('Completing task and adding reward:', reward);
+                userBalance.cityTon += reward;
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'task',
+                    amount: reward,
+                    currency: 'City TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                showModal("Task Completed!", `You earned ${reward} City TON!`);
+            }, 3000);
+        };
+
+        window.purchaseCharacter = async function(charId, character) {
+            console.log('Attempting to purchase character:', character);
+            
+            if (userBalance.ton < character.price) {
+                showModal("Insufficient Balance", "You don't have enough TON to purchase this character.");
+                return;
+            }
+            
+            const confirmPurchase = await showConfirmModal("Purchase Character", `Buy Level ${character.level} character for ${character.price} TON?`);
+            if (confirmPurchase) {
+                console.log('Purchase confirmed, updating character and balance');
+                userBalance.ton -= character.price;
+                userCharacter = {
+                    level: character.level,
+                    income: character.income,
+                    upgradeCost: character.price * 1.5
+                };
+                
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'purchase',
+                    amount: character.price,
+                    currency: 'TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                showModal("Purchase Successful!", `You now own a Level ${character.level} character!`);
+            }
+        };
+
+        window.depositTON = async function() {
+            console.log('Attempting TON deposit...');
+            
+            const amount = parseFloat(document.getElementById('amount-input').value);
+            if (!amount || amount <= 0) {
+                showModal("Invalid Amount", "Please enter a valid amount to deposit.");
+                return;
+            }
+            
+            try {
+                console.log('Checking wallet connection...');
+                if (!tonConnectUI?.wallet) {
+                    showModal("Wallet Not Connected", "Please connect your wallet first.");
+                    return;
+                }
+                
+                const transaction = {
+                    validUntil: Math.floor(Date.now() / 1000) + 60,
+                    messages: [{
+                        address: "EQABa48hjKzg09hN_HjxOic7r8T1PleIy1dRd8NvZ3922MP0",
+                        amount: (amount * 1000000000).toString() // Convert to nanotons
+                    }]
+                };
+                
+                await tonConnectUI.sendTransaction(transaction);
+                console.log('Transaction sent successfully');
+                
+                // Update balance (in real app, verify transaction first)
+                userBalance.ton += amount;
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'deposit',
+                    amount: amount,
+                    currency: 'TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                document.getElementById('amount-input').value = '';
+                showModal("Deposit Successful!", `${amount} TON has been added to your balance.`);
+                
+            } catch (error) {
+                console.error("Deposit failed:", error);
+                showModal("Deposit Failed", "Transaction was cancelled or failed.");
+            }
+        };
+
+        window.withdrawTON = async function() {
+            console.log('Attempting TON withdrawal...');
+            
+            const cityTonAmount = parseFloat(document.getElementById('amount-input').value) * 1000; // Convert TON to City TON
+            
+            if (!cityTonAmount || cityTonAmount < 5000) {
+                showModal("Invalid Amount", "Minimum withdrawal is 5000 City TON (0.005 TON).");
+                return;
+            }
+            
+            if (userBalance.cityTon < cityTonAmount) {
+                showModal("Insufficient Balance", "You don't have enough City TON to withdraw.");
+                return;
+            }
+            
+            const tonAmount = cityTonAmount / 1000;
+            const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${tonAmount} TON (${cityTonAmount} City TON)?`);
+            
+            if (confirmWithdraw) {
+                console.log('Withdrawal confirmed, processing...');
+                userBalance.cityTon -= cityTonAmount;
+                await updateUserData();
+                
+                // Add to history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'withdraw',
+                    amount: tonAmount,
+                    currency: 'TON',
+                    timestamp: Date.now()
+                });
+                
+                updateUI();
+                document.getElementById('amount-input').value = '';
+                showModal("Withdrawal Requested", `${tonAmount} TON withdrawal has been processed.`);
+            }
+        };
+
+        window.copyReferralLink = function() {
+            console.log('Copying referral link...');
+            const referralLink = document.getElementById('referral-link').textContent;
+            navigator.clipboard.writeText(referralLink).then(() => {
+                showModal("Link Copied!", "Referral link has been copied to clipboard.");
+            });
+        };
+
+        window.showModal = function(title, message) {
+            console.log('Showing modal:', title, message);
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-text').textContent = message;
+            document.getElementById('modal').classList.add('active');
+        };
+
+        window.showConfirmModal = function(title, message) {
+            return new Promise((resolve) => {
+                console.log('Showing confirm modal:', title, message);
+                document.getElementById('modal-title').textContent = title;
+                document.getElementById('modal-text').textContent = message;
+                document.getElementById('modal-confirm').onclick = () => {
+                    closeModal();
+                    resolve(true);
+                };
+                document.querySelector('.modal-btn.secondary').onclick = () => {
+                    closeModal();
+                    resolve(false);
+                };
+                document.getElementById('modal').classList.add('active');
+            });
+        };
+
+        window.closeModal = function() {
+            console.log('Closing modal');
+            document.getElementById('modal').classList.remove('active');
+        };
+    </script>
+</body>
+</html>
