@@ -589,7 +589,7 @@
                         <div class="balance-label">TON</div>
                     </div>
                     <div class="balance-card">
-                        <div class="balance-amount" id="city-balance">1000</div>
+                        <div class="balance-amount" id="city-balance">10</div>
                         <div class="balance-label">TON City</div>
                     </div>
                 </div>
@@ -771,8 +771,9 @@
         // Global variables
         let currentUser = null;
         let tonConnectUI = null;
-        let userBalance = { ton: 0, cityTon: 1000 };
+        let userBalance = { ton: 0, cityTon: 10 };
         let userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1 };
+        let isInitialized = false;
 
         // Initialize Telegram Web App
         let tg = window.Telegram?.WebApp;
@@ -781,6 +782,7 @@
             tg.expand();
             currentUser = tg.initDataUnsafe?.user;
             if (currentUser) {
+                console.log('Telegram user detected:', currentUser);
                 document.getElementById('user-name').textContent = currentUser.first_name || 'User';
                 document.getElementById('user-id').textContent = currentUser.id;
                 initializeUser();
@@ -788,6 +790,7 @@
         } else {
             // Fallback for testing
             currentUser = { id: 123456, first_name: 'Test User' };
+            console.log('Using fallback user for testing');
             document.getElementById('user-name').textContent = 'Test User';
             document.getElementById('user-id').textContent = '123456';
             initializeUser();
@@ -809,6 +812,11 @@
 
         // Initialize user data
         async function initializeUser() {
+            if (isInitialized) return;
+            isInitialized = true;
+            
+            console.log('Initializing user:', currentUser);
+            
             if (!currentUser) return;
 
             const userRef = ref(database, `users/${currentUser.id}`);
@@ -820,18 +828,21 @@
                     id: currentUser.id,
                     name: currentUser.first_name || 'User',
                     username: currentUser.username || '',
-                    balance: userBalance,
+                    balance: { ton: 0, cityTon: 10 },
                     character: userCharacter,
                     joinDate: Date.now(),
                     referrals: [],
                     totalEarned: 0
                 };
                 await set(userRef, newUser);
+                userBalance = newUser.balance;
+                console.log('New user created with balance:', userBalance);
             } else {
                 // Load existing user data
                 const userData = snapshot.val();
                 userBalance = userData.balance || userBalance;
                 userCharacter = userData.character || userCharacter;
+                console.log('Existing user loaded with balance:', userBalance);
             }
 
             updateUI();
@@ -839,6 +850,7 @@
             loadCharacters();
             loadHistory();
             startEarningTimer();
+            showWelcomeMessage();
             initTonConnect();
         }
 
@@ -849,6 +861,18 @@
             document.getElementById('character-level').textContent = userCharacter.level;
             document.getElementById('character-income').textContent = `${userCharacter.income.toFixed(3)} TON`;
             document.getElementById('upgrade-cost').textContent = `${userCharacter.upgradeCost.toFixed(3)} TON`;
+            
+            console.log('UI updated with:', {
+                tonBalance: userBalance.ton,
+                cityBalance: userBalance.cityTon,
+                characterLevel: userCharacter.level
+            });
+        }
+        
+        function showWelcomeMessage() {
+            setTimeout(() => {
+                showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`);
+            }, 1000);
         }
 
         // Start earning timer
@@ -856,6 +880,7 @@
             setInterval(async () => {
                 userBalance.cityTon += userCharacter.income * 1000; // Convert to City TON
                 await updateUserData();
+                console.log('Hourly income added:', userCharacter.income * 1000);
                 updateUI();
             }, 3600000); // Every hour
         }
@@ -864,6 +889,7 @@
         async function updateUserData() {
             if (!currentUser) return;
             
+            console.log('Updating user data:', userBalance);
             const userRef = ref(database, `users/${currentUser.id}`);
             await set(userRef, {
                 id: currentUser.id,
@@ -877,6 +903,8 @@
 
         // Load tasks from Firebase
         async function loadTasks() {
+            console.log('Loading tasks...');
+            
             const tasksRef = ref(database, 'tasks');
             onValue(tasksRef, (snapshot) => {
                 const tasksContainer = document.getElementById('tasks-list');
@@ -889,8 +917,10 @@
                         const taskElement = createTaskElement(taskId, task);
                         tasksContainer.appendChild(taskElement);
                     });
+                    console.log('Tasks loaded:', Object.keys(tasks).length);
                 } else {
-                    tasksContainer.innerHTML = '<p>No tasks available</p>';
+                    console.log('No tasks found, creating default tasks...');
+                    createDefaultTasks();
                 }
             });
         }
@@ -917,6 +947,8 @@
 
         // Load characters from Firebase
         async function loadCharacters() {
+            console.log('Loading characters...');
+            
             const charactersRef = ref(database, 'characters');
             onValue(charactersRef, (snapshot) => {
                 const charactersContainer = document.getElementById('characters-grid');
@@ -929,8 +961,10 @@
                         const charElement = createCharacterElement(charId, character);
                         charactersContainer.appendChild(charElement);
                     });
+                    console.log('Characters loaded:', Object.keys(characters).length);
                 } else {
-                    charactersContainer.innerHTML = '<p>No characters available</p>';
+                    console.log('No characters found, creating default characters...');
+                    createDefaultCharacters();
                 }
             });
         }
@@ -954,6 +988,8 @@
 
         // Load transaction history
         async function loadHistory() {
+            console.log('Loading transaction history...');
+            
             if (!currentUser) return;
             
             const historyRef = ref(database, `users/${currentUser.id}/history`);
@@ -968,6 +1004,7 @@
                         const histElement = createHistoryElement(transaction);
                         historyContainer.appendChild(histElement);
                     });
+                    console.log('History loaded:', Object.keys(history).length, 'transactions');
                 } else {
                     historyContainer.innerHTML = '<p>No transaction history</p>';
                 }
@@ -988,6 +1025,75 @@
                 </div>
             `;
             return histDiv;
+        }
+
+        // Create default tasks if none exist
+        async function createDefaultTasks() {
+            const defaultTasks = [
+                {
+                    title: "Join TON City Telegram",
+                    description: "Join our official Telegram channel",
+                    reward: 50,
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://t.me/Toncitypaybot"
+                },
+                {
+                    title: "Follow on Twitter",
+                    description: "Follow our Twitter account for updates",
+                    reward: 30,
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://twitter.com"
+                },
+                {
+                    title: "Share with Friends",
+                    description: "Share TON City with your friends",
+                    reward: 25,
+                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
+                    url: "https://t.me/share/url?url=https://t.me/Toncitypaybot/app"
+                }
+            ];
+
+            const tasksRef = ref(database, 'tasks');
+            for (const task of defaultTasks) {
+                await push(tasksRef, task);
+            }
+            console.log('Default tasks created');
+        }
+
+        // Create default characters if none exist
+        async function createDefaultCharacters() {
+            const defaultCharacters = [
+                {
+                    level: 2,
+                    price: 0.1,
+                    income: 0.002,
+                    iconUrl: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                },
+                {
+                    level: 3,
+                    price: 0.25,
+                    income: 0.005,
+                    iconUrl: "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                },
+                {
+                    level: 4,
+                    price: 0.5,
+                    income: 0.01,
+                    iconUrl: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                },
+                {
+                    level: 5,
+                    price: 1.0,
+                    income: 0.02,
+                    iconUrl: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
+                }
+            ];
+
+            const charactersRef = ref(database, 'characters');
+            for (const character of defaultCharacters) {
+                await push(charactersRef, character);
+            }
+            console.log('Default characters created');
         }
 
         // Global functions for UI interactions
@@ -1013,6 +1119,7 @@
 
         window.connectToWallet = async function() {
             try {
+                console.log('Connecting to wallet...');
                 if (!tonConnectUI) {
                     initTonConnect();
                     await new Promise(resolve => setTimeout(resolve, 1000));
@@ -1025,6 +1132,8 @@
         };
 
         window.startTask = async function(taskId, url, reward) {
+            console.log('Starting task:', taskId, 'with reward:', reward);
+            
             // Open task URL
             if (url && url !== '') {
                 window.open(url, '_blank');
@@ -1032,6 +1141,7 @@
             
             // Wait 3 seconds then complete task
             setTimeout(async () => {
+                console.log('Completing task and adding reward:', reward);
                 userBalance.cityTon += reward;
                 await updateUserData();
                 
@@ -1050,6 +1160,8 @@
         };
 
         window.purchaseCharacter = async function(charId, character) {
+            console.log('Attempting to purchase character:', character);
+            
             if (userBalance.ton < character.price) {
                 showModal("Insufficient Balance", "You don't have enough TON to purchase this character.");
                 return;
@@ -1057,6 +1169,7 @@
             
             const confirmPurchase = await showConfirmModal("Purchase Character", `Buy Level ${character.level} character for ${character.price} TON?`);
             if (confirmPurchase) {
+                console.log('Purchase confirmed, updating character and balance');
                 userBalance.ton -= character.price;
                 userCharacter = {
                     level: character.level,
@@ -1081,6 +1194,8 @@
         };
 
         window.depositTON = async function() {
+            console.log('Attempting TON deposit...');
+            
             const amount = parseFloat(document.getElementById('amount-input').value);
             if (!amount || amount <= 0) {
                 showModal("Invalid Amount", "Please enter a valid amount to deposit.");
@@ -1088,6 +1203,7 @@
             }
             
             try {
+                console.log('Checking wallet connection...');
                 if (!tonConnectUI?.wallet) {
                     showModal("Wallet Not Connected", "Please connect your wallet first.");
                     return;
@@ -1102,6 +1218,7 @@
                 };
                 
                 await tonConnectUI.sendTransaction(transaction);
+                console.log('Transaction sent successfully');
                 
                 // Update balance (in real app, verify transaction first)
                 userBalance.ton += amount;
@@ -1127,6 +1244,8 @@
         };
 
         window.withdrawTON = async function() {
+            console.log('Attempting TON withdrawal...');
+            
             const cityTonAmount = parseFloat(document.getElementById('amount-input').value) * 1000; // Convert TON to City TON
             
             if (!cityTonAmount || cityTonAmount < 5000) {
@@ -1143,6 +1262,7 @@
             const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${tonAmount} TON (${cityTonAmount} City TON)?`);
             
             if (confirmWithdraw) {
+                console.log('Withdrawal confirmed, processing...');
                 userBalance.cityTon -= cityTonAmount;
                 await updateUserData();
                 
@@ -1162,6 +1282,7 @@
         };
 
         window.copyReferralLink = function() {
+            console.log('Copying referral link...');
             const referralLink = document.getElementById('referral-link').textContent;
             navigator.clipboard.writeText(referralLink).then(() => {
                 showModal("Link Copied!", "Referral link has been copied to clipboard.");
@@ -1169,6 +1290,7 @@
         };
 
         window.showModal = function(title, message) {
+            console.log('Showing modal:', title, message);
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-text').textContent = message;
             document.getElementById('modal').classList.add('active');
@@ -1176,6 +1298,7 @@
 
         window.showConfirmModal = function(title, message) {
             return new Promise((resolve) => {
+                console.log('Showing confirm modal:', title, message);
                 document.getElementById('modal-title').textContent = title;
                 document.getElementById('modal-text').textContent = message;
                 document.getElementById('modal-confirm').onclick = () => {
@@ -1191,6 +1314,7 @@
         };
 
         window.closeModal = function() {
+            console.log('Closing modal');
             document.getElementById('modal').classList.remove('active');
         };
     </script>
