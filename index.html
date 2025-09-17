@@ -248,7 +248,7 @@
             cursor: pointer;
         }
 
-        .shop-item:hover {
+        .shop-item:not(.purchased):hover { /* Only hover if not purchased */
             transform: translateY(-5px);
             box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
@@ -262,6 +262,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+
+        .shop-item.purchased {
+            opacity: 0.7;
+            cursor: not-allowed;
+            background: #e0e0e0;
         }
 
         .task-list {
@@ -285,6 +291,11 @@
             box-shadow: 0 4px 20px rgba(0,0,0,0.15);
         }
 
+        .task-item.completed {
+            opacity: 0.6;
+            background: #f8f9ff;
+        }
+
         .task-icon {
             width: 40px;
             height: 40px;
@@ -294,6 +305,14 @@
             align-items: center;
             justify-content: center;
             color: white;
+            overflow: hidden; /* Ensure image doesn't overflow */
+        }
+        
+        .task-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Ensure image covers the area */
+            border-radius: 8px;
         }
 
         .task-content {
@@ -483,6 +502,7 @@
             margin: 10px 0;
             cursor: pointer;
             transition: all 0.3s ease;
+            word-break: break-all; /* Ensure long URLs break */
         }
 
         .referral-code:hover {
@@ -498,6 +518,12 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap; /* Allow wrapping for smaller screens */
+            gap: 10px;
+        }
+        
+        .earnings-card > div {
+            text-align: center;
         }
 
         .loading {
@@ -554,6 +580,18 @@
             color: #2196F3;
         }
 
+        .history-type.purchase {
+            background: #fff9c4; /* Light yellow */
+            color: #fbc02d; /* Darker yellow */
+        }
+
+        .currently-owned {
+            font-size: 13px;
+            color: #2e7d32; /* Dark green */
+            font-weight: 500;
+            margin-top: 5px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 max-width: 100%;
@@ -599,29 +637,11 @@
         <!-- Home Page -->
         <div id="home-page" class="page active">
             <div class="character-section">
-                <div class="character-card">
-                    <div class="character-image">
-                        <span class="material-icons" style="font-size: 60px; color: white;">person</span>
+                <div class="character-card" id="current-character-card">
+                    <!-- Character details will be loaded here -->
+                    <div class="loading">
+                        <div class="spinner"></div>
                     </div>
-                    <h3>Default Character</h3>
-                    <div class="character-stats">
-                        <div class="stat-item">
-                            <span>Level</span>
-                            <span id="character-level">1</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Income/Hour</span>
-                            <span id="character-income">0.001 TON</span>
-                        </div>
-                        <div class="stat-item">
-                            <span>Upgrade Cost</span>
-                            <span id="upgrade-cost">0.1 TON</span>
-                        </div>
-                    </div>
-                    <button class="upgrade-btn" onclick="goToShop()">
-                        <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">upgrade</span>
-                        Upgrade Me
-                    </button>
                 </div>
             </div>
         </div>
@@ -684,7 +704,7 @@
                     </button>
                     
                     <div style="margin-top: 20px;">
-                        <input type="number" id="amount-input" class="amount-input" placeholder="Enter TON amount" step="0.001">
+                        <input type="number" id="amount-input" class="amount-input" placeholder="Enter amount (TON City)" step="0.001">
                         <div class="action-buttons">
                             <button class="action-btn deposit-btn" onclick="depositTON()">
                                 <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">add</span>
@@ -696,7 +716,7 @@
                             </button>
                         </div>
                         <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                            Minimum withdrawal: 5000 City TON (0.05 TON)
+                            Min. Deposit: 0.001 TON | Min. Withdrawal: 5000 City TON (0.005 TON)
                         </p>
                     </div>
                 </div>
@@ -772,8 +792,13 @@
         let currentUser = null;
         let tonConnectUI = null;
         let userBalance = { ton: 0, cityTon: 10 };
-        let userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1 };
+        let userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1, iconUrl: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1" }; // Default character
+        let purchasedCharacters = {}; // { charId: true, ... }
+        let completedTasks = {}; // { taskId: true, ... }
+        let allCharacters = {}; // Store all available characters
+        let allTasks = {}; // Store all available tasks
         let isInitialized = false;
+        let earningIntervalId = null; // To manage the interval
 
         // Initialize Telegram Web App
         let tg = window.Telegram?.WebApp;
@@ -786,39 +811,57 @@
                 document.getElementById('user-name').textContent = currentUser.first_name || 'User';
                 document.getElementById('user-id').textContent = currentUser.id;
                 initializeUser();
+            } else {
+                console.error('Telegram user not found. Cannot proceed without user ID.');
+                showModal("Error", "Could not initialize with Telegram user. Please try opening the bot from Telegram.");
             }
         } else {
-            // Fallback for testing
-            currentUser = { id: 123456, first_name: 'Test User' };
-            console.log('Using fallback user for testing');
-            document.getElementById('user-name').textContent = 'Test User';
-            document.getElementById('user-id').textContent = '123456';
+            // Fallback for testing (if not running in Telegram context)
+            console.warn('Telegram Web App not detected. Using fallback user for testing.');
+            // You MUST have a user ID for Firebase. Mock one if necessary.
+            if (!currentUser) {
+                currentUser = { id: Math.floor(Math.random() * 1000000), first_name: 'Test User' };
+            }
+            document.getElementById('user-name').textContent = currentUser.first_name || 'User';
+            document.getElementById('user-id').textContent = currentUser.id;
             initializeUser();
         }
 
         // Initialize TON Connect
         function initTonConnect() {
             tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-                manifestUrl: window.location.origin + '/tonconnect-manifest.json',
+                manifestUrl: window.location.origin + '/tonconnect-manifest.json', // Ensure this file exists in your public folder
                 buttonRootId: 'ton-connect'
+            });
+
+            tonConnectUI.onStatusChange(async (wallet) => {
+                console.log('TON Connect Status Change:', wallet);
+                if (wallet) {
+                    document.getElementById('connect-btn').textContent = `Connected: ${wallet.device.appName}`;
+                    document.getElementById('connect-btn').onclick = () => tonConnectUI.disconnect(); // Allow disconnect
+                    document.getElementById('connect-btn').style.background = 'linear-gradient(135deg, #888, #555)'; // Grayed out
+                    // Optionally, fetch TON balance from wallet here if needed
+                } else {
+                    document.getElementById('connect-btn').textContent = 'Connect TON Wallet';
+                    document.getElementById('connect-btn').onclick = connectToWallet;
+                    document.getElementById('connect-btn').style.background = ''; // Reset background
+                }
             });
 
             tonConnectUI.setOptions({
                 actionsConfiguration: {
-                    twaReturnUrl: 'https://t.me/Toncitypaybot/app'
+                    twaReturnUrl: 'https://t.me/Toncitypaybot/app' // Adjust if your bot username is different
                 }
             });
         }
 
         // Initialize user data
         async function initializeUser() {
-            if (isInitialized) return;
+            if (!currentUser || isInitialized) return;
             isInitialized = true;
             
             console.log('Initializing user:', currentUser);
             
-            if (!currentUser) return;
-
             const userRef = ref(database, `users/${currentUser.id}`);
             const snapshot = await get(userRef);
             
@@ -828,27 +871,39 @@
                     id: currentUser.id,
                     name: currentUser.first_name || 'User',
                     username: currentUser.username || '',
-                    balance: { ton: 0, cityTon: 10 },
-                    character: userCharacter,
+                    balance: { ton: 0, cityTon: 10 }, // Initial balance
+                    character: userCharacter, // Default character
+                    completedTasks: {},
+                    purchasedCharacters: {}, // No characters purchased initially
+                    referrals: [], // Empty array for referrals
+                    totalReferralEarnings: 0, // Initial referral earnings
                     joinDate: Date.now(),
-                    referrals: [],
-                    totalEarned: 0
+                    lastUpdate: Date.now()
                 };
                 await set(userRef, newUser);
+                console.log('New user created:', newUser);
                 userBalance = newUser.balance;
-                console.log('New user created with balance:', userBalance);
+                userCharacter = newUser.character;
+                completedTasks = newUser.completedTasks;
+                purchasedCharacters = newUser.purchasedCharacters;
             } else {
                 // Load existing user data
                 const userData = snapshot.val();
                 userBalance = userData.balance || userBalance;
-                userCharacter = userData.character || userCharacter;
-                console.log('Existing user loaded with balance:', userBalance);
+                userCharacter = userData.character || userCharacter; // Load purchased character
+                completedTasks = userData.completedTasks || {};
+                purchasedCharacters = userData.purchasedCharacters || {};
+                // Initialize referrals and earnings if they don't exist
+                if (!userData.referrals) userData.referrals = [];
+                if (!userData.totalReferralEarnings) userData.totalReferralEarnings = 0;
+                console.log('Existing user loaded:', userData);
             }
 
             updateUI();
             loadTasks();
             loadCharacters();
             loadHistory();
+            loadReferralData();
             startEarningTimer();
             showWelcomeMessage();
             initTonConnect();
@@ -857,10 +912,12 @@
         // Update UI with current data
         function updateUI() {
             document.getElementById('ton-balance').textContent = userBalance.ton.toFixed(3);
-            document.getElementById('city-balance').textContent = userBalance.cityTon.toLocaleString();
-            document.getElementById('character-level').textContent = userCharacter.level;
-            document.getElementById('character-income').textContent = `${userCharacter.income.toFixed(3)} TON`;
-            document.getElementById('upgrade-cost').textContent = `${userCharacter.upgradeCost.toFixed(3)} TON`;
+            document.getElementById('city-balance').textContent = userBalance.cityTon.toLocaleString('en-US', { maximumFractionDigits: 0 }); // Displaying City TON without decimals
+            document.getElementById('user-name').textContent = currentUser?.first_name || 'User';
+            document.getElementById('user-id').textContent = currentUser?.id || '123456';
+            
+            // Update home page character card
+            loadCurrentCharacterCard();
             
             console.log('UI updated with:', {
                 tonBalance: userBalance.ton,
@@ -870,26 +927,35 @@
         }
         
         function showWelcomeMessage() {
-            setTimeout(() => {
-                showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`);
-            }, 1000);
+            // Only show welcome message if it's a new user or a significant update
+            // For simplicity, we'll show it on first load after initialization
+            if (userBalance.cityTon === 10 && Object.keys(completedTasks).length === 0 && Object.keys(purchasedCharacters).length === 0) {
+                setTimeout(() => {
+                    showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`);
+                }, 1000);
+            }
         }
 
         // Start earning timer
         function startEarningTimer() {
-            setInterval(async () => {
-                userBalance.cityTon += userCharacter.income * 1000; // Convert to City TON
+            if (earningIntervalId) clearInterval(earningIntervalId); // Clear existing interval if any
+
+            earningIntervalId = setInterval(async () => {
+                if (!userCharacter) return; // Ensure character is loaded
+                const incomeInCityTon = userCharacter.income * 1000; // Convert TON income to City TON
+                userBalance.cityTon += incomeInCityTon;
                 await updateUserData();
-                console.log('Hourly income added:', userCharacter.income * 1000);
+                console.log(`Hourly income added: ${incomeInCityTon.toLocaleString('en-US', { maximumFractionDigits: 0 })} City TON`);
                 updateUI();
             }, 3600000); // Every hour
+            console.log("Earning timer started.");
         }
 
         // Update user data in Firebase
         async function updateUserData() {
             if (!currentUser) return;
             
-            console.log('Updating user data:', userBalance);
+            console.log('Updating user data:', { balance: userBalance, character: userCharacter, completedTasks: completedTasks, purchasedCharacters: purchasedCharacters });
             const userRef = ref(database, `users/${currentUser.id}`);
             await set(userRef, {
                 id: currentUser.id,
@@ -897,8 +963,47 @@
                 username: currentUser.username || '',
                 balance: userBalance,
                 character: userCharacter,
+                completedTasks: completedTasks,
+                purchasedCharacters: purchasedCharacters,
+                referrals: [], // Placeholder for now, will load referral data separately
+                totalReferralEarnings: 0, // Placeholder
                 lastUpdate: Date.now()
             });
+        }
+
+        // Load current character for home page
+        function loadCurrentCharacterCard() {
+            const characterCardDiv = document.getElementById('current-character-card');
+            if (!userCharacter) {
+                characterCardDiv.innerHTML = '<p>No character selected.</p>';
+                return;
+            }
+
+            characterCardDiv.innerHTML = `
+                <div class="character-image">
+                    <img src="${userCharacter.iconUrl}" alt="Level ${userCharacter.level}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
+                </div>
+                <h3>${userCharacter.name || `Level ${userCharacter.level}`}</h3>
+                <div class="character-stats">
+                    <div class="stat-item">
+                        <span>Level</span>
+                        <span id="character-level">${userCharacter.level}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Income/Hour</span>
+                        <span id="character-income">${userCharacter.income.toFixed(3)} TON</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Next Upgrade Cost</span>
+                        <span id="upgrade-cost">${userCharacter.upgradeCost.toFixed(3)} TON</span>
+                    </div>
+                </div>
+                <button class="upgrade-btn" onclick="goToShop()">
+                    <span class="material-icons" style="vertical-align: middle; margin-right: 8px;">upgrade</span>
+                    Upgrade Me
+                </button>
+                ${userCharacter.level > 1 ? '<p class="currently-owned">Currently Owned</p>' : ''}
+            `;
         }
 
         // Load tasks from Firebase
@@ -909,18 +1014,20 @@
             onValue(tasksRef, (snapshot) => {
                 const tasksContainer = document.getElementById('tasks-list');
                 tasksContainer.innerHTML = '';
+                allTasks = {}; // Clear previous tasks
                 
                 if (snapshot.exists()) {
                     const tasks = snapshot.val();
                     Object.keys(tasks).forEach(taskId => {
-                        const task = tasks[taskId];
-                        const taskElement = createTaskElement(taskId, task);
+                        allTasks[taskId] = tasks[taskId]; // Store task data
+                        const taskElement = createTaskElement(taskId, tasks[taskId]);
                         tasksContainer.appendChild(taskElement);
                     });
-                    console.log('Tasks loaded:', Object.keys(tasks).length);
+                    console.log('Tasks loaded:', Object.keys(allTasks).length);
+                    updateTaskButtonStates(); // Update button states after loading
                 } else {
                     console.log('No tasks found, creating default tasks...');
-                    createDefaultTasks();
+                    createDefaultTasks().then(loadTasks); // Reload tasks after creating defaults
                 }
             });
         }
@@ -928,18 +1035,19 @@
         // Create task element
         function createTaskElement(taskId, task) {
             const taskDiv = document.createElement('div');
-            taskDiv.className = 'task-item';
+            taskDiv.className = `task-item ${completedTasks[taskId] ? 'completed' : ''}`;
+            taskDiv.id = `task-${taskId}`;
             taskDiv.innerHTML = `
                 <div class="task-icon">
-                    <img src="${task.iconUrl}" alt="${task.title}" style="width: 100%; height: 100%; border-radius: 8px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <span class="material-icons" style="display: none;">task_alt</span>
+                    <img src="${task.iconUrl || 'https://www.gstatic.com/images/icons/material/system_default/svg/task_alt.svg'}" alt="${task.title}" onerror="this.onerror=null; this.src='https://www.gstatic.com/images/icons/material/system_default/svg/task_alt.svg'; this.nextElementSibling.style.display='flex';">
+                    <span class="material-icons" style="${task.iconUrl ? 'display: none;' : 'display: flex;'}">task_alt</span>
                 </div>
                 <div class="task-content">
                     <div class="task-title">${task.title}</div>
                     <div class="task-reward">+${task.reward} City TON</div>
                 </div>
-                <button class="task-btn" onclick="startTask('${taskId}', '${task.url}', ${task.reward})">
-                    Start
+                <button class="task-btn" data-task-id="${taskId}" onclick="handleTaskAction('${taskId}', '${task.url || ''}', ${task.reward})">
+                    ${completedTasks[taskId] ? 'Completed' : 'Start'}
                 </button>
             `;
             return taskDiv;
@@ -953,18 +1061,20 @@
             onValue(charactersRef, (snapshot) => {
                 const charactersContainer = document.getElementById('characters-grid');
                 charactersContainer.innerHTML = '';
+                allCharacters = {}; // Clear previous characters
                 
                 if (snapshot.exists()) {
                     const characters = snapshot.val();
                     Object.keys(characters).forEach(charId => {
-                        const character = characters[charId];
-                        const charElement = createCharacterElement(charId, character);
+                        allCharacters[charId] = characters[charId]; // Store character data
+                        const charElement = createCharacterElement(charId, characters[charId]);
                         charactersContainer.appendChild(charElement);
                     });
-                    console.log('Characters loaded:', Object.keys(characters).length);
+                    console.log('Characters loaded:', Object.keys(allCharacters).length);
+                    updateShopButtonStates(); // Update button states after loading
                 } else {
                     console.log('No characters found, creating default characters...');
-                    createDefaultCharacters();
+                    createDefaultCharacters().then(loadCharacters); // Reload characters after creating defaults
                 }
             });
         }
@@ -972,18 +1082,85 @@
         // Create character element
         function createCharacterElement(charId, character) {
             const charDiv = document.createElement('div');
-            charDiv.className = 'shop-item';
-            charDiv.onclick = () => purchaseCharacter(charId, character);
+            const isPurchased = purchasedCharacters[charId];
+            charDiv.className = `shop-item ${isPurchased ? 'purchased' : ''}`;
+            charDiv.id = `character-${charId}`;
+            charDiv.setAttribute('data-char-id', charId);
+
+            // Only attach click listener if not purchased and not the current character
+            if (!isPurchased && charId !== getUserCharacterId(userCharacter)) {
+                charDiv.onclick = () => purchaseCharacter(charId, character);
+            } else {
+                charDiv.style.cursor = 'not-allowed';
+            }
+
             charDiv.innerHTML = `
                 <div class="shop-item-image">
-                    <img src="${character.iconUrl}" alt="Level ${character.level}" style="width: 100%; height: 100%; border-radius: 50%;" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <span class="material-icons" style="display: none; color: white;">person</span>
+                    <img src="${character.iconUrl || 'https://www.gstatic.com/images/icons/material/system_default/svg/person.svg'}" alt="Level ${character.level}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;">
                 </div>
-                <h4>Level ${character.level}</h4>
-                <p>${character.price} TON</p>
-                <p>+${character.income} TON/h</p>
+                <h4>${character.name || `Level ${character.level}`}</h4>
+                <p>${character.price.toFixed(3)} TON</p>
+                <p>+${character.income.toFixed(3)} TON/h</p>
+                ${isPurchased ? '<p class="currently-owned">Owned</p>' : ''}
+                ${charId === getUserCharacterId(userCharacter) && !isPurchased ? '<p class="currently-owned">Current</p>' : ''}
             `;
             return charDiv;
+        }
+        
+        // Helper to get the Firebase ID of the current character
+        function getUserCharacterId(character) {
+            if (!character) return null;
+            for (const charId in allCharacters) {
+                if (allCharacters[charId].level === character.level && 
+                    allCharacters[charId].income === character.income &&
+                    allCharacters[charId].price === character.price) {
+                    return charId;
+                }
+            }
+            return null; // Should not happen if current character is from the loaded list
+        }
+
+        // Update button states for tasks
+        function updateTaskButtonStates() {
+            document.querySelectorAll('.task-btn').forEach(button => {
+                const taskId = button.getAttribute('data-task-id');
+                if (completedTasks[taskId]) {
+                    button.textContent = 'Completed';
+                    button.disabled = true;
+                } else {
+                    button.textContent = 'Start';
+                    button.disabled = false;
+                }
+            });
+        }
+
+        // Update button states for shop items
+        function updateShopButtonStates() {
+            Object.keys(allCharacters).forEach(charId => {
+                const shopItem = document.getElementById(`character-${charId}`);
+                if (!shopItem) return;
+
+                const isPurchased = purchasedCharacters[charId];
+                const isCurrent = charId === getUserCharacterId(userCharacter);
+
+                if (isPurchased || isCurrent) {
+                    shopItem.classList.add('purchased');
+                    shopItem.style.cursor = 'not-allowed';
+                    shopItem.onclick = null; // Remove click handler
+                    // Update text if needed
+                    if (isCurrent && !isPurchased) {
+                       const ownedText = shopItem.querySelector('.currently-owned');
+                       if (ownedText) ownedText.textContent = 'Current';
+                    } else if (isPurchased) {
+                       const ownedText = shopItem.querySelector('.currently-owned');
+                       if (ownedText) ownedText.textContent = 'Owned';
+                    }
+                } else {
+                    shopItem.classList.remove('purchased');
+                    shopItem.style.cursor = 'pointer';
+                    shopItem.onclick = () => purchaseCharacter(charId, allCharacters[charId]);
+                }
+            });
         }
 
         // Load transaction history
@@ -999,14 +1176,15 @@
                 
                 if (snapshot.exists()) {
                     const history = snapshot.val();
-                    Object.keys(history).reverse().slice(0, 10).forEach(histId => {
-                        const transaction = history[histId];
+                    const sortedHistory = Object.entries(history).sort(([,a], [,b]) => b.timestamp - a.timestamp); // Sort by timestamp descending
+                    
+                    sortedHistory.slice(0, 10).forEach(([histId, transaction]) => { // Take last 10
                         const histElement = createHistoryElement(transaction);
                         historyContainer.appendChild(histElement);
                     });
-                    console.log('History loaded:', Object.keys(history).length, 'transactions');
+                    console.log('History loaded:', sortedHistory.length, 'transactions');
                 } else {
-                    historyContainer.innerHTML = '<p>No transaction history</p>';
+                    historyContainer.innerHTML = '<p>No transaction history yet.</p>';
                 }
             });
         }
@@ -1015,16 +1193,45 @@
         function createHistoryElement(transaction) {
             const histDiv = document.createElement('div');
             histDiv.className = 'history-item';
+            
+            let typeClass = transaction.type;
+            let typeText = transaction.type.charAt(0).toUpperCase() + transaction.type.slice(1);
+            let currencySymbol = '';
+
+            if (transaction.currency === 'TON') {
+                currencySymbol = 'TON';
+            } else if (transaction.currency === 'City TON') {
+                currencySymbol = 'City TON';
+                typeClass = 'task'; // Use 'task' styling for City TON rewards
+                typeText = 'Reward';
+            } else if (transaction.currency === 'USD') {
+                currencySymbol = '$';
+            }
+
             histDiv.innerHTML = `
                 <div>
-                    <div style="font-weight: 600;">${transaction.type.toUpperCase()}</div>
-                    <div style="font-size: 12px; color: #666;">${new Date(transaction.timestamp).toLocaleDateString()}</div>
+                    <div style="font-weight: 600;">${typeText}</div>
+                    <div style="font-size: 12px; color: #666;">${new Date(transaction.timestamp).toLocaleString()}</div>
                 </div>
                 <div>
-                    <span class="history-type ${transaction.type}">${transaction.amount} ${transaction.currency}</span>
+                    <span class="history-type ${typeClass}">${transaction.amount.toLocaleString('en-US', { maximumFractionDigits: 3 })} ${currencySymbol}</span>
                 </div>
             `;
             return histDiv;
+        }
+
+        // Load Referral Data
+        async function loadReferralData() {
+            if (!currentUser) return;
+
+            const userRef = ref(database, `users/${currentUser.id}`);
+            onValue(userRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const userData = snapshot.val();
+                    document.getElementById('total-referrals').textContent = userData.referrals ? userData.referrals.length : 0;
+                    document.getElementById('referral-earnings').textContent = `${userData.totalReferralEarnings ? userData.totalReferralEarnings.toFixed(3) : 0} TON`;
+                }
+            });
         }
 
         // Create default tasks if none exist
@@ -1032,68 +1239,79 @@
             const defaultTasks = [
                 {
                     title: "Join TON City Telegram",
-                    description: "Join our official Telegram channel",
                     reward: 50,
-                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
-                    url: "https://t.me/Toncitypaybot"
+                    iconUrl: "https://uxwing.com/wp-content/themes/uxwing/download/10-communication-chat-smileys/telegram-icon.png", // Telegram icon
+                    url: "https://t.me/Toncitypaybot" // Replace with your actual Telegram channel/group link
                 },
                 {
                     title: "Follow on Twitter",
-                    description: "Follow our Twitter account for updates",
                     reward: 30,
-                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
-                    url: "https://twitter.com"
+                    iconUrl: "https://uxwing.com/wp-content/themes/uxwing/download/social-media-apps/twitter-x-icon.png", // Twitter icon
+                    url: "https://twitter.com/YourTwitterHandle" // Replace with your actual Twitter profile link
                 },
                 {
                     title: "Share with Friends",
-                    description: "Share TON City with your friends",
                     reward: 25,
-                    iconUrl: "https://images.pexels.com/photos/267350/pexels-photo-267350.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1",
-                    url: "https://t.me/share/url?url=https://t.me/Toncitypaybot/app"
+                    iconUrl: "https://uxwing.com/wp-content/themes/uxwing/download/interface-Essentials/share-icon.png", // Share icon
+                    url: "" // No direct URL for this one, handled by the 'Start' button logic
                 }
             ];
 
             const tasksRef = ref(database, 'tasks');
-            for (const task of defaultTasks) {
-                await push(tasksRef, task);
+            const existingTasksSnapshot = await get(tasksRef);
+            if (!existingTasksSnapshot.exists() || Object.keys(existingTasksSnapshot.val()).length === 0) {
+                for (const task of defaultTasks) {
+                    await push(tasksRef, task);
+                }
+                console.log('Default tasks created');
+            } else {
+                console.log('Tasks already exist, skipping default creation.');
             }
-            console.log('Default tasks created');
         }
 
         // Create default characters if none exist
         async function createDefaultCharacters() {
             const defaultCharacters = [
                 {
-                    level: 2,
+                    level: 1,
+                    name: "Basic Miner",
                     price: 0.1,
-                    income: 0.002,
+                    income: 0.001,
                     iconUrl: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 },
                 {
-                    level: 3,
+                    level: 2,
+                    name: "Advanced Miner",
                     price: 0.25,
-                    income: 0.005,
+                    income: 0.002,
                     iconUrl: "https://images.pexels.com/photos/614810/pexels-photo-614810.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 },
                 {
-                    level: 4,
+                    level: 3,
+                    name: "Pro Miner",
                     price: 0.5,
-                    income: 0.01,
+                    income: 0.005,
                     iconUrl: "https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 },
                 {
-                    level: 5,
+                    level: 4,
+                    name: "Master Miner",
                     price: 1.0,
-                    income: 0.02,
+                    income: 0.01,
                     iconUrl: "https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&dpr=1"
                 }
             ];
 
             const charactersRef = ref(database, 'characters');
-            for (const character of defaultCharacters) {
-                await push(charactersRef, character);
+            const existingCharsSnapshot = await get(charactersRef);
+            if (!existingCharsSnapshot.exists() || Object.keys(existingCharsSnapshot.val()).length === 0) {
+                for (const character of defaultCharacters) {
+                    await push(charactersRef, character);
+                }
+                console.log('Default characters created');
+            } else {
+                console.log('Characters already exist, skipping default creation.');
             }
-            console.log('Default characters created');
         }
 
         // Global functions for UI interactions
@@ -1111,18 +1329,34 @@
             // Show selected page and activate nav item
             document.getElementById(pageId).classList.add('active');
             navItem.classList.add('active');
+
+            // Refresh data relevant to the page
+            if (pageId === 'home-page') {
+                loadCurrentCharacterCard();
+            } else if (pageId === 'shop-page') {
+                loadCharacters(); // Re-load to ensure button states are correct
+            } else if (pageId === 'tasks-page') {
+                loadTasks(); // Re-load to ensure button states are correct
+            } else if (pageId === 'profile-page') {
+                loadHistory(); // Re-load history
+            }
         };
 
         window.goToShop = function() {
-            showPage('shop-page', document.querySelectorAll('.nav-item')[1]);
+            // Find the shop nav item and click it
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.querySelector('.nav-label').textContent === 'Shop') {
+                    item.click();
+                }
+            });
         };
 
         window.connectToWallet = async function() {
             try {
-                console.log('Connecting to wallet...');
+                console.log('Opening TON Connect modal...');
                 if (!tonConnectUI) {
                     initTonConnect();
-                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure initialization
                 }
                 await tonConnectUI.openModal();
             } catch (error) {
@@ -1131,18 +1365,35 @@
             }
         };
 
-        window.startTask = async function(taskId, url, reward) {
-            console.log('Starting task:', taskId, 'with reward:', reward);
+        window.handleTaskAction = async function(taskId, url, reward) {
+            console.log('Handling task action for task:', taskId);
+
+            // If task is already completed, do nothing
+            if (completedTasks[taskId]) {
+                console.log('Task already completed.');
+                return;
+            }
             
-            // Open task URL
+            // Mark task as in progress immediately
+            document.getElementById(`task-${taskId}`).classList.add('completed');
+            document.getElementById(`task-${taskId}`).querySelector('.task-btn').textContent = 'In Progress';
+            document.getElementById(`task-${taskId}`).querySelector('.task-btn').disabled = true;
+
+            // If there's a URL, open it
             if (url && url !== '') {
+                console.log('Opening URL:', url);
                 window.open(url, '_blank');
             }
             
-            // Wait 3 seconds then complete task
+            // For "Share with Friends" type tasks without a URL, or general tasks:
+            // We'll simulate a completion delay. In a real app, you'd verify completion.
+            const completionDelay = url ? 5000 : 3000; // Longer delay if a URL was opened
+            
             setTimeout(async () => {
                 console.log('Completing task and adding reward:', reward);
                 userBalance.cityTon += reward;
+                completedTasks[taskId] = true; // Mark as completed
+
                 await updateUserData();
                 
                 // Add to history
@@ -1155,26 +1406,38 @@
                 });
                 
                 updateUI();
-                showModal("Task Completed!", `You earned ${reward} City TON!`);
-            }, 3000);
+                updateTaskButtonStates(); // Refresh button states
+                showModal("Task Completed!", `You earned ${reward.toLocaleString('en-US', { maximumFractionDigits: 0 })} City TON!`);
+            }, completionDelay);
         };
 
         window.purchaseCharacter = async function(charId, character) {
             console.log('Attempting to purchase character:', character);
             
-            if (userBalance.ton < character.price) {
-                showModal("Insufficient Balance", "You don't have enough TON to purchase this character.");
+            // Check if already purchased or is current character
+            if (purchasedCharacters[charId] || charId === getUserCharacterId(userCharacter)) {
+                showModal("Already Owned", "You already own this character or it is your current character.");
                 return;
             }
             
-            const confirmPurchase = await showConfirmModal("Purchase Character", `Buy Level ${character.level} character for ${character.price} TON?`);
+            if (userBalance.ton < character.price) {
+                showModal("Insufficient Balance", `You don't have enough TON to purchase this character. You need ${character.price.toFixed(3)} TON.`);
+                return;
+            }
+            
+            const confirmPurchase = await showConfirmModal("Purchase Character", `Buy "${character.name || `Level ${character.level}`}" for ${character.price.toFixed(3)} TON?`);
             if (confirmPurchase) {
                 console.log('Purchase confirmed, updating character and balance');
                 userBalance.ton -= character.price;
+                purchasedCharacters[charId] = true; // Mark as purchased
+                
+                // Update the user's active character
                 userCharacter = {
                     level: character.level,
+                    name: character.name,
                     income: character.income,
-                    upgradeCost: character.price * 1.5
+                    upgradeCost: character.price * 1.5, // Next upgrade cost
+                    iconUrl: character.iconUrl
                 };
                 
                 await updateUserData();
@@ -1189,103 +1452,129 @@
                 });
                 
                 updateUI();
-                showModal("Purchase Successful!", `You now own a Level ${character.level} character!`);
+                updateShopButtonStates(); // Refresh button states on shop items
+                loadCurrentCharacterCard(); // Refresh home screen character card
+                showModal("Purchase Successful!", `You now own "${character.name || `Level ${character.level}`}" and it is now your active character!`);
             }
         };
 
         window.depositTON = async function() {
             console.log('Attempting TON deposit...');
             
-            const amount = parseFloat(document.getElementById('amount-input').value);
-            if (!amount || amount <= 0) {
-                showModal("Invalid Amount", "Please enter a valid amount to deposit.");
+            const amountInput = document.getElementById('amount-input');
+            const amount = parseFloat(amountInput.value);
+            const minDeposit = 0.001;
+
+            if (!amount || amount < minDeposit) {
+                showModal("Invalid Amount", `Please enter a valid TON amount. Minimum deposit is ${minDeposit} TON.`);
                 return;
             }
             
             try {
                 console.log('Checking wallet connection...');
                 if (!tonConnectUI?.wallet) {
-                    showModal("Wallet Not Connected", "Please connect your wallet first.");
+                    showModal("Wallet Not Connected", "Please connect your TON wallet first.");
                     return;
                 }
                 
+                // Address for smart contract or wallet that receives deposits
+                const depositContractAddress = "EQABa48hjKzg09hN_HjxOic7r8T1PleIy1dRd8NvZ3922MP0"; // Replace with your actual contract/wallet address
+
                 const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 60,
+                    validUntil: Math.floor(Date.now() / 1000) + 300, // 5 minutes
                     messages: [{
-                        address: "EQABa48hjKzg09hN_HjxOic7r8T1PleIy1dRd8NvZ3922MP0",
+                        address: depositContractAddress,
                         amount: (amount * 1000000000).toString() // Convert to nanotons
                     }]
                 };
                 
                 await tonConnectUI.sendTransaction(transaction);
-                console.log('Transaction sent successfully');
+                console.log('TON deposit transaction sent.');
                 
-                // Update balance (in real app, verify transaction first)
-                userBalance.ton += amount;
-                await updateUserData();
-                
-                // Add to history
-                const historyRef = ref(database, `users/${currentUser.id}/history`);
-                await push(historyRef, {
-                    type: 'deposit',
-                    amount: amount,
-                    currency: 'TON',
-                    timestamp: Date.now()
-                });
-                
-                updateUI();
-                document.getElementById('amount-input').value = '';
-                showModal("Deposit Successful!", `${amount} TON has been added to your balance.`);
+                // IMPORTANT: In a real application, you would NOT immediately update the balance here.
+                // You MUST wait for the transaction to be confirmed on the blockchain.
+                // For this example, we'll simulate a success after a short delay.
+                // In production, you'd use a webhook or query the blockchain.
+                setTimeout(async () => {
+                    console.log('Simulating deposit confirmation.');
+                    userBalance.ton += amount;
+                    await updateUserData();
+                    
+                    // Add to history
+                    const historyRef = ref(database, `users/${currentUser.id}/history`);
+                    await push(historyRef, {
+                        type: 'deposit',
+                        amount: amount,
+                        currency: 'TON',
+                        timestamp: Date.now()
+                    });
+                    
+                    updateUI();
+                    amountInput.value = ''; // Clear input
+                    showModal("Deposit Successful!", `${amount.toFixed(3)} TON has been added to your balance.`);
+                }, 5000); // Simulate confirmation delay of 5 seconds
                 
             } catch (error) {
-                console.error("Deposit failed:", error);
-                showModal("Deposit Failed", "Transaction was cancelled or failed.");
+                console.error("TON Deposit failed:", error);
+                showModal("Deposit Failed", "Transaction was cancelled or failed. Please check your wallet.");
             }
         };
 
         window.withdrawTON = async function() {
             console.log('Attempting TON withdrawal...');
             
-            const cityTonAmount = parseFloat(document.getElementById('amount-input').value) * 1000; // Convert TON to City TON
-            
-            if (!cityTonAmount || cityTonAmount < 5000) {
-                showModal("Invalid Amount", "Minimum withdrawal is 5000 City TON (0.005 TON).");
+            const amountInput = document.getElementById('amount-input');
+            const cityTonAmountInput = parseFloat(amountInput.value); // Input is in City TON
+            const minWithdrawalCityTon = 5000; // 5000 City TON
+            const tonToCityTonRate = 1000; // 1 TON = 1000 City TON
+
+            if (!cityTonAmountInput || cityTonAmountInput < minWithdrawalCityTon) {
+                showModal("Invalid Amount", `Minimum withdrawal is ${minWithdrawalCityTon.toLocaleString()} City TON (0.005 TON).`);
                 return;
             }
             
-            if (userBalance.cityTon < cityTonAmount) {
-                showModal("Insufficient Balance", "You don't have enough City TON to withdraw.");
+            if (userBalance.cityTon < cityTonAmountInput) {
+                showModal("Insufficient Balance", `You don't have enough City TON to withdraw. Available: ${userBalance.cityTon.toLocaleString()}.`);
                 return;
             }
-            
-            const tonAmount = cityTonAmount / 1000;
-            const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${tonAmount} TON (${cityTonAmount} City TON)?`);
+
+            const tonAmountToWithdraw = cityTonAmountInput / tonToCityTonRate;
+            const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${tonAmountToWithdraw.toFixed(3)} TON (${cityTonAmountInput.toLocaleString()} City TON)?`);
             
             if (confirmWithdraw) {
                 console.log('Withdrawal confirmed, processing...');
-                userBalance.cityTon -= cityTonAmount;
+                userBalance.cityTon -= cityTonAmountInput; // Deduct from City TON balance
+                // Note: Actual TON withdrawal to the user's wallet would require a separate process
+                // (e.g., a backend service or a smart contract with withdrawal functionality).
+                // For this example, we just update the City TON balance.
+
                 await updateUserData();
                 
                 // Add to history
                 const historyRef = ref(database, `users/${currentUser.id}/history`);
                 await push(historyRef, {
                     type: 'withdraw',
-                    amount: tonAmount,
+                    amount: tonAmountToWithdraw, // Store the TON amount withdrawn
                     currency: 'TON',
                     timestamp: Date.now()
                 });
                 
                 updateUI();
-                document.getElementById('amount-input').value = '';
-                showModal("Withdrawal Requested", `${tonAmount} TON withdrawal has been processed.`);
+                amountInput.value = ''; // Clear input
+                showModal("Withdrawal Processed", `Your withdrawal request for ${tonAmountToWithdraw.toFixed(3)} TON has been initiated. Funds will be sent to your connected wallet.`);
             }
         };
 
         window.copyReferralLink = function() {
             console.log('Copying referral link...');
-            const referralLink = document.getElementById('referral-link').textContent;
+            const userId = document.getElementById('user-id').textContent;
+            const referralLink = `https://t.me/Toncitypaybot/app?start=${userId}`; // Ensure this matches your bot's deep link structure
+            
             navigator.clipboard.writeText(referralLink).then(() => {
                 showModal("Link Copied!", "Referral link has been copied to clipboard.");
+            }).catch(err => {
+                console.error('Failed to copy referral link: ', err);
+                showModal("Copy Failed", "Could not copy the link. Please try manually.");
             });
         };
 
@@ -1293,6 +1582,8 @@
             console.log('Showing modal:', title, message);
             document.getElementById('modal-title').textContent = title;
             document.getElementById('modal-text').textContent = message;
+            // Ensure OK button functionality is reset
+            document.getElementById('modal-confirm').onclick = () => closeModal();
             document.getElementById('modal').classList.add('active');
         };
 
@@ -1301,10 +1592,13 @@
                 console.log('Showing confirm modal:', title, message);
                 document.getElementById('modal-title').textContent = title;
                 document.getElementById('modal-text').textContent = message;
+                
+                // Set up confirm button
                 document.getElementById('modal-confirm').onclick = () => {
                     closeModal();
                     resolve(true);
                 };
+                // Ensure cancel button also closes modal and resolves false
                 document.querySelector('.modal-btn.secondary').onclick = () => {
                     closeModal();
                     resolve(false);
@@ -1316,7 +1610,18 @@
         window.closeModal = function() {
             console.log('Closing modal');
             document.getElementById('modal').classList.remove('active');
+            // Reset confirm button's default action to just close
+            document.getElementById('modal-confirm').onclick = () => closeModal();
         };
+
+        // Initial data load and setup
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initial render of the home page (loading spinner will show)
+            if (currentUser) {
+                initializeUser(); // Initialize if user already detected
+            }
+        });
+
     </script>
 </body>
 </html>
