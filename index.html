@@ -224,7 +224,7 @@
         .page {
             display: none;
             padding: 20px;
-            padding-bottom: 80px; /* Space for navigation bar */
+            padding-bottom: 80px;
         }
 
         .page.active {
@@ -246,10 +246,6 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
         }
 
         .shop-item:hover {
@@ -266,13 +262,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden; /* Ensure image stays within circle */
+            overflow: hidden; /* Ensure image fits */
         }
-
+        
         .shop-item-image img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Ensure image covers the circle */
+            object-fit: cover;
         }
 
         .task-list {
@@ -305,14 +301,14 @@
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 24px; /* Adjusted for icon */
+            font-size: 24px;
+            overflow: hidden; /* Ensure image fits */
         }
         
-        .task-icon img { /* Style for actual image */
+        .task-icon img {
             width: 100%;
             height: 100%;
-            border-radius: 8px;
-            object-fit: cover; /* Ensure image covers the area */
+            object-fit: cover;
         }
 
         .task-content {
@@ -522,12 +518,12 @@
 
         .loading {
             display: flex;
+            flex-direction: column; /* Stack spinner and text */
             align-items: center;
             justify-content: center;
             padding: 40px;
             color: #666;
-            flex-direction: column; /* Stack spinner and text */
-            gap: 10px;
+            gap: 10px; /* Space between spinner and text */
         }
 
         .spinner {
@@ -582,31 +578,11 @@
             background: #fff3e0;
             color: #ff9800;
         }
-        
-        .history-type.referral {
-            background: #fce4ec;
-            color: #e91e63;
-        }
 
         .history-details {
             font-size: 12px;
             color: #666;
             margin-top: 5px;
-        }
-
-        .modal-close-btn { /* Custom close button for modal */
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #aaa;
-        }
-
-        .modal-close-btn:hover {
-            color: #333;
         }
 
         @media (max-width: 768px) {
@@ -625,10 +601,6 @@
 
             .action-buttons {
                 flex-direction: column;
-            }
-            
-            .modal-content {
-                padding: 20px;
             }
         }
     </style>
@@ -660,6 +632,7 @@
             <div class="character-section">
                 <div class="character-card">
                     <div class="character-image">
+                        <!-- Placeholder for character image -->
                         <span class="material-icons" style="font-size: 60px; color: white;">person</span>
                     </div>
                     <h3 id="character-name">Default Character</h3>
@@ -802,12 +775,11 @@
     <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content">
-            <button class="modal-close-btn" onclick="closeModal()">X</button>
             <h3 class="modal-title" id="modal-title">Title</h3>
             <p class="modal-text" id="modal-text">Message</p>
             <div class="modal-buttons">
-                <button class="modal-btn secondary" id="modal-cancel-btn">Cancel</button>
-                <button class="modal-btn primary" id="modal-confirm-btn">Confirm</button>
+                <button class="modal-btn secondary" id="modal-close-btn">Close</button>
+                <button class="modal-btn primary" id="modal-confirm">Confirm</button>
             </div>
         </div>
     </div>
@@ -817,9 +789,9 @@
         import { getDatabase, ref, set, get, push, onValue, child, remove, update } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js';
         import * as tcu from 'https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js';
 
-        // Firebase configuration
+        // --- Firebase Configuration ---
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY", // Replace with your actual API key
+            apiKey: "YOUR_API_KEY", // !! IMPORTANT: Replace with your actual Firebase API Key !!
             authDomain: "pxfx-block-chain.firebaseapp.com",
             databaseURL: "https://pxfx-block-chain-default-rtdb.firebaseio.com",
             projectId: "pxfx-block-chain",
@@ -827,23 +799,24 @@
             messagingSenderId: "14103598672",
             appId: "1:14103598672:web:5476f52de8d53b07f92355"
         };
+        // --- End Firebase Configuration ---
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
 
-        // Global variables
+        // --- Global Variables ---
         let currentUser = null;
         let tonConnectUI = null;
-        let userBalance = { ton: 0.000, cityTon: 10 }; // Default values
+        let userBalance = { ton: 0.000, cityTon: 10 };
         let userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1, name: 'Default Character', iconUrl: 'https://www.gstatic.com/images/icons/material/system/1x/person_black_48dp.svg' };
         let referralData = { totalReferrals: 0, earned: 0 };
         let initialized = false;
         let userSpecificTasks = {}; // To track completed tasks per user
         let currentNavButton = null;
-        let referralDeeplinkBase = 'https://t.me/Toncitypaybot/app?start='; // Base for referral link
+        let transactionVerificationInterval = null; // To poll for deposit verification
 
-        // Initialize Telegram Web App
+        // --- Telegram Web App Initialization ---
         let tg = window.Telegram?.WebApp;
         if (tg) {
             tg.ready();
@@ -852,21 +825,23 @@
             if (currentUser) {
                 console.log('Telegram user detected:', currentUser);
                 document.getElementById('user-name').textContent = currentUser.first_name || 'User';
-                document.getElementById('user-id-for-ref').textContent = currentUser.id; // For referral link
+                document.getElementById('user-id-for-ref').textContent = currentUser.id;
                 if (!initialized) initializeAppCore();
             } else {
-                console.error('Telegram user data not found.');
-                showModal("Login Error", "Could not retrieve user information from Telegram. Please open this bot within Telegram.");
+                console.error('Telegram user data not found. Please ensure you are opening the bot from Telegram.');
+                showModal("Error", "Could not detect Telegram user. Please open this app from within the Telegram bot.", () => {
+                    if (tg) tg.close();
+                });
             }
         } else {
-            console.warn('Telegram Web App not found. Using fallback user for testing.');
-            // Fallback for testing outside Telegram client - ensure it's a valid structure
-            currentUser = { id: 1234567890, first_name: 'Test User', username: 'testuser' };
+            console.warn('Telegram Web App not found. Using fallback user for testing. Please open within Telegram for full functionality.');
+            currentUser = { id: 123456789, first_name: 'Test User' };
             document.getElementById('user-name').textContent = 'Test User';
-            document.getElementById('user-id-for-ref').textContent = '1234567890';
+            document.getElementById('user-id-for-ref').textContent = '123456789';
             if (!initialized) initializeAppCore();
         }
 
+        // --- Core App Initialization ---
         async function initializeAppCore() {
             if (initialized || !currentUser) return;
             initialized = true;
@@ -880,8 +855,12 @@
             startEarningTimer();
             showWelcomeMessage();
             initTonConnect();
+            
+            // Set up modal button event listeners
+            document.getElementById('modal-close-btn').onclick = closeModal;
         }
 
+        // --- Data Loading Functions ---
         async function loadUserAndGameData() {
             console.log('Loading user and game data...');
             const userRef = ref(database, `users/${currentUser.id}`);
@@ -893,12 +872,12 @@
                     id: currentUser.id,
                     name: currentUser.first_name || 'User',
                     username: currentUser.username || '',
-                    balance: { ton: 0.000, cityTon: 10 }, // Initial balance
+                    balance: { ton: 0.000, cityTon: 10 },
                     character: { level: 1, income: 0.001, upgradeCost: 0.1, name: 'Default Character', iconUrl: 'https://www.gstatic.com/images/icons/material/system/1x/person_black_48dp.svg'},
                     joinDate: Date.now(),
-                    referralId: `${currentUser.id}${Math.random().toString(36).substring(2, 9)}`, // Generate a unique referral ID
+                    referralId: `${currentUser.id}${Math.random().toString(36).substring(2, 9)}`,
                     referralData: { totalReferrals: 0, earned: 0 },
-                    completedTasks: {}, // To track completed tasks
+                    completedTasks: {},
                     history: {},
                     lastActive: Date.now()
                 };
@@ -916,86 +895,20 @@
                 referralData = userData.referralData || { totalReferrals: 0, earned: 0 };
                 userSpecificTasks = userData.completedTasks || {};
                 
-                // Ensure essential fields exist with default fallbacks
-                if (!userBalance.ton) userBalance.ton = 0.000;
-                if (!userBalance.cityTon) userBalance.cityTon = 10;
-                if (!userCharacter.level) userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1, name: 'Default Character', iconUrl: 'https://www.gstatic.com/images/icons/material/system/1x/person_black_48dp.svg'};
-                if (!userCharacter.name) userCharacter.name = 'Default Character';
-                if (!userCharacter.iconUrl) userCharacter.iconUrl = 'https://www.gstatic.com/images/icons/material/system/1x/person_black_48dp.svg';
-                if (!userCharacter.upgradeCost) userCharacter.upgradeCost = userCharacter.price * 1.5 || 0.1; // Calculate if missing
-                if (!referralData.earned) referralData.earned = 0;
+                // Ensure essential fields exist with defaults if missing
+                userBalance.ton = userBalance.ton !== undefined ? userBalance.ton : 0.000;
+                userBalance.cityTon = userBalance.cityTon !== undefined ? userBalance.cityTon : 10;
+                if (!userCharacter || !userCharacter.level) userCharacter = { level: 1, income: 0.001, upgradeCost: 0.1, name: 'Default Character', iconUrl: 'https://www.gstatic.com/images/icons/material/system/1x/person_black_48dp.svg'};
+                if (!referralData || referralData.earned === undefined) referralData.earned = 0;
                 if (!userSpecificTasks) userSpecificTasks = {};
-                if (!userData.history) userData.history = {}; // Ensure history object exists
-
-                // Update last active timestamp
+                
                 await update(userRef, { lastActive: Date.now() });
             }
         }
 
-        function updateUI() {
-            document.getElementById('ton-balance').textContent = userBalance.ton.toFixed(3);
-            document.getElementById('city-balance').textContent = userBalance.cityTon.toLocaleString();
-            document.getElementById('character-name').textContent = userCharacter.name;
-            document.getElementById('character-level').textContent = userCharacter.level;
-            document.getElementById('character-income').textContent = `${userCharacter.income.toFixed(3)} TON`;
-            document.getElementById('upgrade-cost').textContent = `${userCharacter.upgradeCost.toFixed(3)} TON`;
-            document.getElementById('user-id-for-ref').textContent = currentUser.id; // Ensure it's updated
-            document.getElementById('total-referrals').textContent = referralData.totalReferrals;
-            document.getElementById('referral-earnings').textContent = `${referralData.earned.toFixed(3)} TON`;
-            
-            console.log('UI updated with:', {
-                tonBalance: userBalance.ton.toFixed(3),
-                cityBalance: userBalance.cityTon.toLocaleString(),
-                characterLevel: userCharacter.level,
-                referralEarned: referralData.earned.toFixed(3)
-            });
-        }
-        
-        function showWelcomeMessage() {
-            // Use localStorage to prevent showing the welcome message every time the app loads
-            if (userBalance.cityTon === 10 && userCharacter.level === 1 && !localStorage.getItem('welcomeMessageShown')) {
-                setTimeout(() => {
-                    showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`, null, true); // Show OK button only
-                    localStorage.setItem('welcomeMessageShown', 'true');
-                }, 1000);
-            }
-        }
-
-        function startEarningTimer() {
-            const hourlyIncome = userCharacter.income;
-            console.log(`Starting earning timer with income: ${hourlyIncome} TON/hour`);
-
-            setInterval(async () => {
-                const incomeToAdd = hourlyIncome; // Income is already in TON
-                userBalance.cityTon += incomeToAdd;
-                await updateUserData();
-                console.log('Hourly income added:', incomeToAdd.toFixed(3), 'City TON');
-                updateUI();
-            }, 3600000); // Every hour
-        }
-
-        async function updateUserData() {
-            if (!currentUser) return;
-            
-            console.log('Updating user data in Firebase...');
-            const userRef = ref(database, `users/${currentUser.id}`);
-            await update(userRef, {
-                balance: userBalance,
-                character: userCharacter,
-                referralData: referralData,
-                completedTasks: userSpecificTasks,
-                lastActive: Date.now()
-            });
-            console.log('User data updated.');
-        }
-
-        // --- Data Loading Functions ---
-
         async function loadTasks() {
             console.log('Loading tasks...');
             const tasksRef = ref(database, 'tasks');
-            
-            // Use onValue to listen for real-time updates
             onValue(tasksRef, (snapshot) => {
                 const tasksContainer = document.getElementById('tasks-list');
                 tasksContainer.innerHTML = ''; // Clear loading state
@@ -1009,38 +922,15 @@
                     });
                     console.log('Tasks loaded:', Object.keys(tasks).length);
                 } else {
-                    console.log('No tasks found in DB, creating default tasks...');
-                    createDefaultTasks().then(() => loadTasks()); // Re-call loadTasks after defaults are created
+                    console.log('No tasks found in Firebase. Creating default tasks...');
+                    createDefaultTasks().then(() => loadTasks()); // Reload tasks after creation
                 }
             });
-        }
-
-        function createTaskElement(taskId, task) {
-            const taskDiv = document.createElement('div');
-            taskDiv.className = 'task-item';
-            
-            const isCompleted = userSpecificTasks[taskId] && userSpecificTasks[taskId].completed;
-
-            taskDiv.innerHTML = `
-                <div class="task-icon">
-                    ${task.iconUrl ? `<img src="${task.iconUrl}" alt="${task.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
-                    <span class="material-icons" style="${task.iconUrl ? 'display:none;' : ''} flex;">task_alt</span>
-                </div>
-                <div class="task-content">
-                    <div class="task-title">${task.title}</div>
-                    <div class="task-reward">+${task.reward} City TON</div>
-                </div>
-                <button class="task-btn" ${isCompleted ? 'disabled' : ''} onclick="startOrCompleteTask('${taskId}', '${task.url}', ${task.reward})">
-                    ${isCompleted ? 'Completed' : 'Start'}
-                </button>
-            `;
-            return taskDiv;
         }
 
         async function loadCharacters() {
             console.log('Loading characters...');
             const charactersRef = ref(database, 'characters');
-            
             onValue(charactersRef, (snapshot) => {
                 const charactersContainer = document.getElementById('characters-grid');
                 charactersContainer.innerHTML = ''; // Clear loading state
@@ -1054,37 +944,14 @@
                     });
                     console.log('Characters loaded:', Object.keys(characters).length);
                 } else {
-                    console.log('No characters found in DB, creating default characters...');
-                    createDefaultCharacters().then(() => loadCharacters()); // Re-call loadCharacters after defaults are created
+                    console.log('No characters found in Firebase. Creating default characters...');
+                    createDefaultCharacters().then(() => loadCharacters()); // Reload characters after creation
                 }
             });
         }
 
-        function createCharacterElement(charId, character) {
-            const charDiv = document.createElement('div');
-            charDiv.className = 'shop-item';
-            // Add data attributes for easier access if needed
-            charDiv.dataset.charId = charId; 
-            charDiv.onclick = () => purchaseCharacter(charId, character);
-            
-            const imageUrl = character.iconUrl || 'https://www.gstatic.com/images/icons/material/system/1x/person_black_48dp.svg';
-            const characterName = character.name || `Level ${character.level}`;
-
-            charDiv.innerHTML = `
-                <div class="shop-item-image">
-                    <img src="${imageUrl}" alt="${characterName}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                    <span class="material-icons" style="font-size: 30px; color: white; display: none;">person</span>
-                </div>
-                <h4>${characterName}</h4>
-                <p>${character.price ? character.price.toFixed(3) : 'N/A'} TON</p>
-                <p>+${character.income ? character.income.toFixed(3) : '0.000'} TON/h</p>
-            `;
-            return charDiv;
-        }
-
         async function loadHistory() {
             console.log('Loading transaction history...');
-            
             if (!currentUser) {
                 document.getElementById('history-list').innerHTML = '<p>Please log in to see history.</p>';
                 return;
@@ -1110,73 +977,204 @@
             });
         }
 
-        function createHistoryElement(transaction) {
-            const histDiv = document.createElement('div');
-            histDiv.className = 'history-item';
+        // --- UI Update Functions ---
+        function updateUI() {
+            document.getElementById('ton-balance').textContent = userBalance.ton.toFixed(3);
+            document.getElementById('city-balance').textContent = userBalance.cityTon.toLocaleString();
+            document.getElementById('character-name').textContent = userCharacter.name;
+            document.getElementById('character-level').textContent = userCharacter.level;
+            document.getElementById('character-income').textContent = `${userCharacter.income.toFixed(3)} TON`;
+            document.getElementById('upgrade-cost').textContent = `${userCharacter.upgradeCost.toFixed(3)} TON`;
+            document.getElementById('user-id-for-ref').textContent = currentUser.id;
+            document.getElementById('total-referrals').textContent = referralData.totalReferrals;
+            document.getElementById('referral-earnings').textContent = `${referralData.earned.toFixed(3)} TON`;
             
-            let typeClass = transaction.type || 'other';
-
-            histDiv.innerHTML = `
-                <div>
-                    <div style="font-weight: 600;">${typeClass.toUpperCase()}</div>
-                    <div class="history-details">${new Date(transaction.timestamp).toLocaleString()}</div>
-                </div>
-                <div>
-                    <span class="history-type ${typeClass}">${transaction.amount.toFixed(3)} ${transaction.currency}</span>
-                </div>
-            `;
-            return histDiv;
+            // Update character image and avatar if available
+            const charImgElement = document.querySelector('.character-card .character-image img');
+            if (userCharacter.iconUrl) {
+                if (!charImgElement) {
+                    const img = document.createElement('img');
+                    img.src = userCharacter.iconUrl;
+                    img.alt = userCharacter.name;
+                    img.style.width = '100%'; img.style.height = '100%'; img.style.objectFit = 'cover';
+                    img.onerror = function() { this.style.display = 'none'; this.nextElementSibling.style.display = 'flex'; };
+                    document.querySelector('.character-card .character-image').prepend(img);
+                } else {
+                    charImgElement.src = userCharacter.iconUrl;
+                    charImgElement.style.display = 'block';
+                    charImgElement.nextElementSibling.style.display = 'none';
+                }
+            } else {
+                // Show default icon if no URL
+                document.querySelector('.character-card .character-image span').style.display = 'flex';
+                if (charImgElement) charImgElement.style.display = 'none';
+            }
+            
+            console.log('UI updated.');
+        }
+        
+        function showWelcomeMessage() {
+            if (userBalance.cityTon === 10 && userCharacter.level === 1 && !localStorage.getItem('welcomeMessageShown')) {
+                setTimeout(() => {
+                    showModal("Welcome to TON City! 🏙️", `Hello ${currentUser?.first_name || 'Player'}! You've received 10 City TON to get started. Complete tasks and upgrade your character to earn more!`);
+                    localStorage.setItem('welcomeMessageShown', 'true');
+                }, 1000);
+            }
         }
 
-        // --- Default Data Creation Functions ---
+        // --- Game Logic Functions ---
+        function startEarningTimer() {
+            const hourlyIncome = userCharacter.income;
+            console.log(`Starting earning timer with income: ${hourlyIncome} TON/hour`);
+
+            if (transactionVerificationInterval) clearInterval(transactionVerificationInterval); // Clear any old interval
+
+            transactionVerificationInterval = setInterval(async () => {
+                const incomeToAdd = hourlyIncome;
+                userBalance.cityTon += incomeToAdd;
+                await updateUserData();
+                console.log('Hourly income added:', incomeToAdd.toFixed(3), 'City TON');
+                updateUI();
+            }, 3600000); // Every hour
+        }
+
+        async function updateUserData() {
+            if (!currentUser) return;
+            console.log('Updating user data in Firebase...');
+            const userRef = ref(database, `users/${currentUser.id}`);
+            await update(userRef, {
+                balance: userBalance,
+                character: userCharacter,
+                referralData: referralData,
+                completedTasks: userSpecificTasks,
+                lastActive: Date.now()
+            });
+            console.log('User data updated.');
+        }
+
+        // --- Task Functions ---
+        function createTaskElement(taskId, task) {
+            const taskDiv = document.createElement('div');
+            taskDiv.className = 'task-item';
+            const isCompleted = userSpecificTasks[taskId] && userSpecificTasks[taskId].completed;
+
+            taskDiv.innerHTML = `
+                <div class="task-icon">
+                    ${task.iconUrl ? `<img src="${task.iconUrl}" alt="${task.title}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">` : ''}
+                    <span class="material-icons" style="${task.iconUrl ? 'display:none;' : ''} flex;">task_alt</span>
+                </div>
+                <div class="task-content">
+                    <div class="task-title">${task.title}</div>
+                    <div class="task-reward">+${task.reward} City TON</div>
+                </div>
+                <button class="task-btn" ${isCompleted ? 'disabled' : ''} onclick="startOrCompleteTask('${taskId}', '${task.url}', ${task.reward})">
+                    ${isCompleted ? 'Completed' : 'Start'}
+                </button>
+            `;
+            return taskDiv;
+        }
+
+        async function startOrCompleteTask(taskId, url, reward) {
+            if (userSpecificTasks[taskId] && userSpecificTasks[taskId].completed) {
+                showModal("Task Already Completed", "You have already completed this task.");
+                return;
+            }
+
+            if (url && url.trim() !== '') {
+                console.log(`Opening URL for task: ${url}`);
+                window.open(url, '_blank');
+            }
+
+            const completionDelay = url && url.trim() !== '' ? 5000 : 1000;
+            const taskButton = document.querySelector(`.task-btn[onclick*="'${taskId}'"]`);
+            if (taskButton) {
+                taskButton.textContent = 'In Progress...';
+                taskButton.disabled = true;
+            }
+            
+            setTimeout(async () => {
+                userBalance.cityTon += reward;
+                userSpecificTasks[taskId] = { completed: true, timestamp: Date.now() };
+                await updateUserData();
+                
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'task',
+                    amount: reward,
+                    currency: 'City TON',
+                    timestamp: Date.now(),
+                    taskId: taskId
+                });
+                
+                updateUI();
+                showModal("Task Completed!", `You earned ${reward} City TON!`);
+                
+                // Update button appearance after completion
+                const updatedTaskButton = document.querySelector(`.task-btn[onclick*="'${taskId}'"]`);
+                if (updatedTaskButton) {
+                    updatedTaskButton.textContent = 'Completed';
+                    updatedTaskButton.disabled = true;
+                }
+            }, completionDelay);
+        }
 
         async function createDefaultTasks() {
             console.log('Creating default tasks...');
             const defaultTasks = [
                 {
                     title: "Join TON City Telegram Channel",
-                    description: "Join our official Telegram channel for updates and community.",
                     reward: 50,
                     iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/82/Telegram_logo.svg/1200px-Telegram_logo.svg.png",
                     url: "https://t.me/Toncitypaybot" // Replace with your actual channel/bot link
                 },
                 {
                     title: "Follow on X (Twitter)",
-                    description: "Follow our X account for the latest news.",
                     reward: 30,
                     iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b8/X_logo_2023.svg/1200px-X_logo_2023.svg.png",
-                    url: "https://x.com/your_twitter_handle" // Replace with your actual X handle
+                    url: "https://x.com/your_twitter_handle" // Replace with your actual handle
                 },
                 {
                     title: "Share TON City",
-                    description: "Share TON City with your friends using your referral link.",
                     reward: 25,
                     iconUrl: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/Share_icon.svg/1200px-Share_icon.svg.png",
-                    url: "" // No specific URL needed, user will use their own referral link
+                    url: ""
                 }
             ];
 
             const tasksRef = ref(database, 'tasks');
-            try {
+            // Check if tasks already exist before pushing defaults
+            const tasksSnapshot = await get(tasksRef);
+            if (!tasksSnapshot.exists()) {
                 for (const task of defaultTasks) {
-                    // Push only if task ID doesn't already exist (basic check)
-                    const existingTasksSnapshot = await get(tasksRef);
-                    let taskExists = false;
-                    if (existingTasksSnapshot.exists()) {
-                        Object.values(existingTasksSnapshot.val()).forEach(t => {
-                            if (t.title === task.title) { // Simple check by title
-                                taskExists = true;
-                            }
-                        });
-                    }
-                    if (!taskExists) {
-                        await push(tasksRef, task);
-                    }
+                    await push(tasksRef, task);
                 }
-                console.log('Default tasks ensured.');
-            } catch (error) {
-                console.error("Error creating default tasks:", error);
+                console.log('Default tasks created.');
+            } else {
+                console.log('Tasks already exist, skipping default creation.');
             }
+        }
+
+        // --- Shop Functions ---
+        function createCharacterElement(charId, character) {
+            const charDiv = document.createElement('div');
+            charDiv.className = 'shop-item';
+            charDiv.onclick = () => purchaseCharacter(charId, character);
+            charDiv.innerHTML = `
+                <div class="shop-item-image">
+                    ${character.iconUrl ? `<img src="${character.iconUrl}" alt="Level ${character.level}">` : '<span class="material-icons">person</span>'}
+                </div>
+                <h4>${character.name || `Level ${character.level}`}</h4>
+                <p>${character.price.toFixed(3)} TON</p>
+                <p>+${character.income.toFixed(3)} TON/h</p>
+            `;
+            const imgElement = charDiv.querySelector('.shop-item-image img');
+            if (imgElement) {
+                imgElement.onerror = function() {
+                    this.style.display = 'none';
+                    this.nextElementSibling.style.display = 'flex';
+                };
+            }
+            return charDiv;
         }
 
         async function createDefaultCharacters() {
@@ -1213,23 +1211,342 @@
             ];
 
             const charactersRef = ref(database, 'characters');
-            try {
-                const existingCharsSnapshot = await get(charactersRef);
-                if (!existingCharsSnapshot.exists() || Object.keys(existingCharsSnapshot.val()).length === 0) {
-                    console.log('No characters found, creating default characters...');
-                    for (const character of defaultCharacters) {
-                        await push(charactersRef, character);
-                    }
-                    console.log('Default characters created.');
-                } else {
-                    console.log('Characters already exist, skipping default creation.');
+             // Check if characters already exist before pushing defaults
+            const charactersSnapshot = await get(charactersRef);
+            if (!charactersSnapshot.exists()) {
+                for (const character of defaultCharacters) {
+                    await push(charactersRef, character);
                 }
-            } catch (error) {
-                console.error("Error creating default characters:", error);
+                console.log('Default characters created.');
+            } else {
+                console.log('Characters already exist, skipping default creation.');
             }
         }
 
-        // --- Navigation Functions ---
+        async function purchaseCharacter(charId, character) {
+            if (userBalance.ton < character.price) {
+                showModal("Insufficient Funds", `You need ${character.price.toFixed(3)} TON to purchase this character. You currently have ${userBalance.ton.toFixed(3)} TON.`);
+                return;
+            }
+            
+            const confirmPurchase = await showConfirmModal("Purchase Character", `Buy "${character.name}" for ${character.price.toFixed(3)} TON?`);
+            if (confirmPurchase) {
+                userBalance.ton -= character.price;
+                userCharacter = {
+                    level: character.level,
+                    income: character.income,
+                    upgradeCost: character.price * 1.5,
+                    name: character.name,
+                    iconUrl: character.iconUrl
+                };
+                
+                await updateUserData();
+                
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'purchase',
+                    amount: character.price,
+                    currency: 'TON',
+                    timestamp: Date.now(),
+                    characterLevel: character.level
+                });
+                
+                updateUI();
+                showModal("Purchase Successful!", `You now own "${character.name}"!`);
+            }
+        };
+
+        // --- Wallet & Transaction Functions ---
+        window.connectToWallet = async function() {
+            console.log('Connecting to wallet...');
+            try {
+                if (!tonConnectUI) {
+                    initTonConnect();
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                
+                if (tonConnectUI.connected) {
+                    showModal("Wallet Connected", `Your wallet is already connected.`);
+                    return;
+                }
+
+                await tonConnectUI.openModal();
+                
+            } catch (error) {
+                console.error("Error connecting to wallet:", error);
+                // Specific check for TWA not available or wallet extension not installed
+                if (error.message.includes('extension is not available') || error.message.includes('No compatible wallets found')) {
+                    showModal("Wallet Not Found", "Please ensure you have a compatible TON wallet browser extension installed (e.g., Tonkeeper, MyTonWallet) or are opening this in a wallet's in-app browser.");
+                } else {
+                    showModal("Connection Error", "Failed to connect to wallet. Please ensure your wallet is installed and accessible.");
+                }
+            }
+        };
+
+        window.depositTON = async function() {
+            const amountInput = document.getElementById('amount-input');
+            const amount = parseFloat(amountInput.value);
+            
+            if (!amount || amount <= 0) {
+                showModal("Invalid Amount", "Please enter a valid positive amount to deposit.");
+                return;
+            }
+            
+            if (!tonConnectUI?.connected) {
+                showModal("Wallet Not Connected", "Please connect your TON wallet first.");
+                return;
+            }
+
+            const depositAddress = "EQCDG_YOUR_CONTRACT_ADDRESS_HERE"; // !! IMPORTANT: Replace with your actual deposit contract address !!
+            if (depositAddress === "EQCDG_YOUR_CONTRACT_ADDRESS_HERE") {
+                showModal("Configuration Error", "Deposit address is not configured. Please contact the administrator.");
+                return;
+            }
+            
+            const transaction = {
+                validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes validity
+                messages: [{
+                    address: depositAddress,
+                    amount: (amount * 1e9).toString(), // Convert TON to nanotons
+                    stateInit: null,
+                    data: null
+                }]
+            };
+            
+            try {
+                console.log("Sending deposit transaction:", transaction);
+                await tonConnectUI.sendTransaction(transaction);
+                console.log('Deposit transaction sent successfully.');
+                
+                // Mark deposit as pending verification in history
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                const newHistoryEntryRef = push(historyRef);
+                await set(newHistoryEntryRef, {
+                    type: 'deposit',
+                    amount: amount,
+                    currency: 'TON',
+                    timestamp: Date.now(),
+                    txHash: 'pending_verification', // Placeholder
+                    status: 'pending'
+                });
+                
+                amountInput.value = ''; // Clear input field
+                showModal("Deposit Pending", `Your deposit of ${amount.toFixed(3)} TON has been sent. It will be credited after network confirmation.`);
+                
+                // Start monitoring for transaction confirmation (simplified)
+                startTransactionVerification(newHistoryEntryRef.key, amount);
+
+            } catch (error) {
+                console.error("Deposit failed:", error);
+                showModal("Deposit Failed", "Transaction was cancelled or failed. Please check your wallet.");
+            }
+        };
+
+        function startTransactionVerification(historyId, expectedAmount) {
+            const userRef = ref(database, `users/${currentUser.id}`);
+            const historyEntryRef = child(userRef, `history/${historyId}`);
+
+            // Clear any existing interval for this user
+            if (transactionVerificationInterval) clearInterval(transactionVerificationInterval);
+
+            let verificationAttempts = 0;
+            const maxAttempts = 10; // Check for ~5 minutes (10 checks * 30 seconds)
+
+            transactionVerificationInterval = setInterval(async () => {
+                verificationAttempts++;
+                console.log(`Transaction verification attempt ${verificationAttempts} for history ID ${historyId}`);
+
+                try {
+                    const userSnapshot = await get(userRef);
+                    if (!userSnapshot.exists()) {
+                        console.warn("User data not found during verification. Stopping verification.");
+                        return clearInterval(transactionVerificationInterval);
+                    }
+                    const userData = userSnapshot.val();
+                    const historyEntry = userData.history && userData.history[historyId];
+
+                    if (historyEntry && historyEntry.txHash && historyEntry.txHash !== 'pending_verification') {
+                        console.log(`Transaction ${historyEntry.txHash} confirmed. Updating balance.`);
+                        // Update balance based on confirmed transaction
+                        userBalance.ton += expectedAmount; // Add the expected amount
+                        await updateUserData(); // Update Firebase balance
+                        await update(historyEntryRef, { status: 'confirmed' }); // Mark as confirmed in history
+                        updateUI();
+                        clearInterval(transactionVerificationInterval);
+                        showModal("Deposit Confirmed", `${expectedAmount.toFixed(3)} TON has been added to your balance.`);
+                    } else if (verificationAttempts >= maxAttempts) {
+                        console.log("Max verification attempts reached. Transaction not confirmed.");
+                        await update(historyEntryRef, { status: 'failed_timeout' });
+                        clearInterval(transactionVerificationInterval);
+                        showModal("Deposit Timeout", "Your deposit could not be confirmed within the expected time. Please check your wallet or contact support.");
+                    }
+                } catch (error) {
+                    console.error("Error during transaction verification:", error);
+                    if (verificationAttempts >= maxAttempts) {
+                        console.log("Max verification attempts reached due to error. Stopping verification.");
+                        await update(historyEntryRef, { status: 'error' });
+                        clearInterval(transactionVerificationInterval);
+                        showModal("Verification Error", "An error occurred during deposit verification. Please contact support.");
+                    }
+                }
+            }, 30000); // Check every 30 seconds
+        }
+
+        window.withdrawTON = async function() {
+            const amountInput = document.getElementById('amount-input');
+            const amountInTON = parseFloat(amountInput.value);
+            const cityTonToSpend = amountInTON * 1000;
+            
+            if (!amountInTON || amountInTON <= 0) {
+                showModal("Invalid Amount", "Please enter a valid positive amount of TON to withdraw.");
+                return;
+            }
+            
+            const minWithdrawalTON = 0.005;
+            if (amountInTON < minWithdrawalTON) {
+                showModal("Minimum Withdrawal", `Minimum withdrawal amount is ${minWithdrawalTON} TON.`);
+                return;
+            }
+            
+            if (userBalance.cityTon < cityTonToSpend) {
+                showModal("Insufficient City TON", `You need ${cityTonToSpend.toLocaleString()} City TON to withdraw ${amountInTON.toFixed(3)} TON. You have ${userBalance.cityTon.toLocaleString()} City TON.`);
+                return;
+            }
+            
+            const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${amountInTON.toFixed(3)} TON (costing ${cityTonToSpend.toLocaleString()} City TON)?`);
+            
+            if (confirmWithdraw) {
+                userBalance.cityTon -= cityTonToSpend;
+                await updateUserData();
+                
+                const historyRef = ref(database, `users/${currentUser.id}/history`);
+                await push(historyRef, {
+                    type: 'withdraw',
+                    amount: amountInTON,
+                    currency: 'TON',
+                    timestamp: Date.now(),
+                    cityTonCost: cityTonToSpend,
+                    status: 'pending_approval' // Withdrawal might need admin approval or go to a withdrawal queue
+                });
+                
+                updateUI();
+                amountInput.value = '';
+                showModal("Withdrawal Requested", `Your withdrawal request for ${amountInTON.toFixed(3)} TON has been submitted. It will be processed shortly.`);
+            }
+        };
+
+        window.copyReferralLink = function() {
+            const userIdForRef = document.getElementById('user-id-for-ref').textContent;
+            const referralLink = `https://t.me/Toncitypaybot/app?start=${userIdForRef}`;
+            
+            navigator.clipboard.writeText(referralLink).then(() => {
+                showModal("Link Copied!", "Your referral link has been copied to the clipboard.");
+            }).catch(err => {
+                console.error('Failed to copy referral link: ', err);
+                showModal("Copy Failed", "Could not copy the link. Please copy it manually.");
+            });
+        };
+
+        // --- Modal Functions ---
+        function showModal(title, message, confirmCallback = null) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-text').textContent = message;
+            
+            const confirmButton = document.getElementById('modal-confirm');
+            const closeButton = document.getElementById('modal-close-btn');
+
+            if (confirmCallback && typeof confirmCallback === 'function') {
+                confirmButton.style.display = 'block';
+                confirmButton.onclick = () => {
+                    confirmCallback();
+                    closeModal();
+                };
+                closeButton.textContent = 'Cancel';
+            } else {
+                confirmButton.style.display = 'none';
+                closeButton.textContent = 'Close';
+                closeButton.onclick = closeModal; // Ensure close button works when confirm is hidden
+            }
+
+            document.getElementById('modal').classList.add('active');
+        }
+
+        function showConfirmModal(title, message) {
+            return new Promise((resolve) => {
+                document.getElementById('modal-title').textContent = title;
+                document.getElementById('modal-text').textContent = message;
+                
+                const confirmButton = document.getElementById('modal-confirm');
+                confirmButton.style.display = 'block';
+                confirmButton.textContent = 'Confirm';
+                confirmButton.onclick = () => {
+                    closeModal();
+                    resolve(true);
+                };
+                
+                const closeButton = document.getElementById('modal-close-btn');
+                closeButton.textContent = 'Cancel';
+                closeButton.onclick = () => {
+                    closeModal();
+                    resolve(false);
+                };
+                
+                document.getElementById('modal').classList.add('active');
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('active');
+            // Reset modal buttons for next time
+            document.getElementById('modal-confirm').style.display = 'block'; // Default to visible
+            document.getElementById('modal-confirm').textContent = 'Confirm';
+            document.getElementById('modal-close-btn').textContent = 'Cancel';
+        }
+
+        // --- TON Connect Initialization ---
+        function initTonConnect() {
+            console.log('Initializing TON Connect UI...');
+            tonConnectUI = new tcu.TonConnectUI({
+                manifestUrl: window.location.origin + '/tonconnect-manifest.json', // Ensure this file exists at the root
+            });
+
+            tonConnectUI.setOptions({
+                actionsConfiguration: {
+                    twaReturnUrl: 'https://t.me/Toncitypaybot/app' // Your bot's TWA deep link
+                }
+            });
+            
+            tonConnectUI.onStatusChange(async wallet => {
+                if (wallet) {
+                    console.log("TON Connect UI: Wallet connected:", wallet.account.address);
+                    document.getElementById('connect-btn').textContent = 'Wallet Connected';
+                    document.getElementById('connect-btn').disabled = true;
+                    
+                    // Store wallet address in Firebase if it's new for this user
+                    const userRef = ref(database, `users/${currentUser.id}`);
+                    const userSnapshot = await get(userRef);
+                    if (userSnapshot.exists()) {
+                        const userData = userSnapshot.val();
+                        if (!userData.walletAddress || userData.walletAddress !== wallet.account.address) {
+                            await update(userRef, { walletAddress: wallet.account.address });
+                            console.log("Wallet address stored:", wallet.account.address);
+                        }
+                    }
+                } else {
+                    console.log("TON Connect UI: Wallet disconnected.");
+                    document.getElementById('connect-btn').textContent = 'Connect TON Wallet';
+                    document.getElementById('connect-btn').disabled = false;
+                }
+            });
+            
+            // Check initial connection status to update button
+            if (tonConnectUI.connected) {
+                document.getElementById('connect-btn').textContent = 'Wallet Connected';
+                document.getElementById('connect-btn').disabled = true;
+            }
+        }
+
+        // --- Navigation and Page Switching ---
         window.showPage = function(pageId, navItem) {
             document.querySelectorAll('.page').forEach(page => {
                 page.classList.remove('active');
@@ -1245,349 +1562,28 @@
 
         window.goToShop = function() {
             const shopNavButton = Array.from(document.querySelectorAll('.nav-item')).find(item => item.onclick && item.onclick.toString().includes('shop-page'));
-            if (shopNavButton) {
-                shopNavButton.click();
-            }
+            if (shopNavButton) shopNavButton.click();
         };
 
-        // --- Wallet Functions ---
-        window.connectToWallet = async function() {
-            console.log('Connecting to wallet...');
-            try {
-                if (!tonConnectUI) {
-                    initTonConnect();
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                }
-                
-                if (tonConnectUI.connected) {
-                    showModal("Wallet Connected", `Your wallet (${tonConnectUI.account.address.slice(0, 6)}...${tonConnectUI.account.address.slice(-4)}) is already connected.`);
-                    return;
-                }
-
-                await tonConnectUI.openModal();
-                
-            } catch (error) {
-                console.error("Error connecting to wallet:", error);
-                showModal("Connection Error", "Failed to connect to wallet. Please ensure you have a compatible wallet installed and try again.");
-            }
-        };
-
-        // --- Task Functions ---
-        window.startOrCompleteTask = async function(taskId, url, reward) {
-            console.log(`Attempting to start/complete task: ${taskId}`);
-
-            if (userSpecificTasks[taskId] && userSpecificTasks[taskId].completed) {
-                showModal("Task Already Done", "This task has already been completed.");
-                return;
-            }
-
-            const taskButton = document.querySelector(`.task-btn[onclick*="'${taskId}'"]`);
-            if (taskButton) {
-                taskButton.textContent = 'In Progress...';
-                taskButton.disabled = true;
-            }
-
-            const completionDelay = url && url.trim() !== '' ? 5000 : 1000; // Longer delay if URL needs user interaction
-
-            // Open URL if provided
-            if (url && url.trim() !== '') {
-                console.log(`Opening URL for task: ${url}`);
-                window.open(url, '_blank');
-            }
-            
-            setTimeout(async () => {
-                console.log(`Completing task ${taskId} and adding reward ${reward}`);
-                userBalance.cityTon += reward;
-                userSpecificTasks[taskId] = { completed: true, timestamp: Date.now() };
-                
-                await updateUserData();
-                
-                // Add to history
-                const historyRef = ref(database, `users/${currentUser.id}/history`);
-                await push(historyRef, {
-                    type: 'task',
-                    amount: reward,
-                    currency: 'City TON',
-                    timestamp: Date.now(),
-                    taskId: taskId
-                });
-                
-                updateUI();
-                showModal("Task Completed!", `You earned ${reward} City TON!`);
-                
-                // Update button appearance after completion
-                const updatedTaskButton = document.querySelector(`.task-btn[onclick*="'${taskId}'"]`);
-                if (updatedTaskButton) {
-                    updatedTaskButton.textContent = 'Completed';
-                    updatedTaskButton.disabled = true;
-                }
-            }, completionDelay);
-        };
-
-        // --- Character Purchase Function ---
-        async function purchaseCharacter(charId, character) {
-            console.log('Attempting to purchase character:', character);
-            
-            if (!character.price || userBalance.ton < character.price) {
-                showModal("Insufficient Funds", `You need ${character.price ? character.price.toFixed(3) : 'N/A'} TON to purchase this character. You currently have ${userBalance.ton.toFixed(3)} TON.`);
-                return;
-            }
-            
-            const confirmPurchase = await showConfirmModal("Purchase Character", `Buy ${character.name || `Level ${character.level}`} for ${character.price.toFixed(3)} TON?`);
-            if (confirmPurchase) {
-                console.log('Purchase confirmed, updating character and balance');
-                userBalance.ton -= character.price;
-                userCharacter = {
-                    level: character.level,
-                    income: character.income,
-                    upgradeCost: character.price * 1.5, // Next upgrade cost
-                    name: character.name,
-                    iconUrl: character.iconUrl
-                };
-                
-                await updateUserData();
-                
-                // Add to history
-                const historyRef = ref(database, `users/${currentUser.id}/history`);
-                await push(historyRef, {
-                    type: 'purchase',
-                    amount: character.price,
-                    currency: 'TON',
-                    timestamp: Date.now(),
-                    characterLevel: character.level
-                });
-                
-                updateUI();
-                showModal("Purchase Successful!", `You now own a ${character.name || `Level ${character.level}`} character!`);
-            }
-        };
-
-        // --- Wallet Transaction Functions ---
-        window.depositTON = async function() {
-            console.log('Attempting TON deposit...');
-            const amountInput = document.getElementById('amount-input');
-            const amount = parseFloat(amountInput.value);
-            
-            if (!amount || amount <= 0) {
-                showModal("Invalid Amount", "Please enter a valid positive amount to deposit.");
-                return;
-            }
-            
-            try {
-                if (!tonConnectUI?.connected) {
-                    showModal("Wallet Not Connected", "Please connect your TON wallet first.");
-                    return;
-                }
-
-                const depositAddress = "EQCDG_YOUR_CONTRACT_ADDRESS_HERE"; // !!! IMPORTANT: Replace with your actual TON contract address !!!
-                if (depositAddress === "EQCDG_YOUR_CONTRACT_ADDRESS_HERE") {
-                    showModal("Configuration Error", "Deposit address not configured. Please contact support or update the code.");
-                    return;
-                }
-                
-                const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 600, // 10 minutes
-                    messages: [{
-                        address: depositAddress,
-                        amount: (amount * 1e9).toString(), // Convert TON to nanotons
-                        stateInit: null, 
-                        data: null     
-                    }]
-                };
-                
-                console.log("Sending deposit transaction:", transaction);
-                await tonConnectUI.sendTransaction(transaction);
-                console.log('Deposit transaction sent successfully.');
-                
-                // In a real app, you'd confirm transaction completion on-chain.
-                // For this example, we update balance and history speculatively.
-                userBalance.ton += amount;
-                await updateUserData(); 
-
-                const historyRef = ref(database, `users/${currentUser.id}/history`);
-                await push(historyRef, {
-                    type: 'deposit',
-                    amount: amount,
-                    currency: 'TON',
-                    timestamp: Date.now(),
-                    txHash: 'pending_verification' // Placeholder
-                });
-                
-                updateUI();
-                amountInput.value = '';
-                showModal("Deposit Initiated", `Your deposit of ${amount.toFixed(3)} TON has been submitted. It may take a few minutes to reflect in your balance after network confirmation.`);
-                
-            } catch (error) {
-                console.error("Deposit failed:", error);
-                showModal("Deposit Failed", "Transaction was cancelled or failed. Please check your wallet.");
-            }
-        };
-
-        window.withdrawTON = async function() {
-            console.log('Attempting TON withdrawal...');
-            const amountInput = document.getElementById('amount-input');
-            const amountInTON = parseFloat(amountInput.value);
-            const cityTonToSpend = amountInTON * 1000; // Assuming 1 TON = 1000 City TON for withdrawal cost
-            
-            if (!amountInTON || amountInTON <= 0) {
-                showModal("Invalid Amount", "Please enter a valid positive amount of TON to withdraw.");
-                return;
-            }
-            
-            const minWithdrawalTON = 0.005; 
-            if (amountInTON < minWithdrawalTON) {
-                showModal("Minimum Withdrawal", `Minimum withdrawal amount is ${minWithdrawalTON} TON.`);
-                return;
-            }
-            
-            if (userBalance.cityTon < cityTonToSpend) {
-                showModal("Insufficient City TON", `You need ${cityTonToSpend.toLocaleString()} City TON to withdraw ${amountInTON.toFixed(3)} TON. You have ${userBalance.cityTon.toLocaleString()} City TON.`);
-                return;
-            }
-            
-            const confirmWithdraw = await showConfirmModal("Withdraw TON", `Withdraw ${amountInTON.toFixed(3)} TON (costing ${cityTonToSpend.toLocaleString()} City TON)?`);
-            
-            if (confirmWithdraw) {
-                console.log('Withdrawal confirmed, processing...');
-                userBalance.cityTon -= cityTonToSpend;
-                await updateUserData();
-                
-                const historyRef = ref(database, `users/${currentUser.id}/history`);
-                await push(historyRef, {
-                    type: 'withdraw',
-                    amount: amountInTON,
-                    currency: 'TON',
-                    timestamp: Date.now(),
-                    cityTonCost: cityTonToSpend
-                });
-                
-                updateUI();
-                amountInput.value = '';
-                showModal("Withdrawal Requested", `Your withdrawal request for ${amountInTON.toFixed(3)} TON has been submitted. It may take some time to process.`);
-            }
-        };
-
-        // --- Referral Functions ---
-        window.copyReferralLink = function() {
-            const userIdForRef = document.getElementById('user-id-for-ref').textContent;
-            const referralLink = `${referralDeeplinkBase}${userIdForRef}`;
-            
-            navigator.clipboard.writeText(referralLink).then(() => {
-                showModal("Link Copied!", "Your referral link has been copied to the clipboard.");
-            }).catch(err => {
-                console.error('Failed to copy referral link: ', err);
-                showModal("Copy Failed", "Could not copy the link. Please copy it manually.");
-            });
-        };
-
-        // --- Modal Functions ---
-        function showModal(title, message, confirmCallback = null, isOkOnly = false) {
-            console.log('Showing modal:', title, message);
-            document.getElementById('modal-title').textContent = title;
-            document.getElementById('modal-text').textContent = message;
-            
-            const confirmButton = document.getElementById('modal-confirm-btn');
-            const cancelButton = document.getElementById('modal-cancel-btn');
-
-            if (isOkOnly) { // For messages like welcome or success
-                confirmButton.style.display = 'none';
-                cancelButton.textContent = 'OK';
-                cancelButton.onclick = () => { closeModal(); if (confirmCallback) confirmCallback(); };
-            } else if (confirmCallback && typeof confirmCallback === 'function') { // For actions requiring confirmation
-                confirmButton.style.display = 'block';
-                confirmButton.textContent = 'Confirm';
-                cancelButton.textContent = 'Cancel';
-                confirmButton.onclick = () => { confirmCallback(); closeModal(); };
-                cancelButton.onclick = closeModal;
-            } else { // Default to a simple close button
-                confirmButton.style.display = 'none';
-                cancelButton.textContent = 'Close';
-                cancelButton.onclick = closeModal;
-            }
-
-            document.getElementById('modal').classList.add('active');
-        }
-
-        function showConfirmModal(title, message) {
-            return new Promise((resolve) => {
-                console.log('Showing confirm modal:', title, message);
-                document.getElementById('modal-title').textContent = title;
-                document.getElementById('modal-text').textContent = message;
-                
-                const confirmButton = document.getElementById('modal-confirm-btn');
-                confirmButton.style.display = 'block'; 
-                confirmButton.textContent = 'Confirm';
-                confirmButton.onclick = () => {
-                    closeModal();
-                    resolve(true);
-                };
-                
-                const cancelButton = document.getElementById('modal-cancel-btn');
-                cancelButton.textContent = 'Cancel';
-                cancelButton.onclick = () => {
-                    closeModal();
-                    resolve(false);
-                };
-                
-                document.getElementById('modal').classList.add('active');
-            });
-        }
-
-        function closeModal() {
-            console.log('Closing modal');
-            document.getElementById('modal').classList.remove('active');
-            // Reset modal buttons for next time
-            document.getElementById('modal-confirm-btn').style.display = 'block';
-            document.getElementById('modal-confirm-btn').textContent = 'Confirm';
-            document.getElementById('modal-cancel-btn').textContent = 'Cancel';
-        }
-
-        // --- TON Connect Initialization ---
-        function initTonConnect() {
-            console.log('Initializing TON Connect UI...');
-            tonConnectUI = new tcu.TonConnectUI({
-                manifestUrl: window.location.origin + '/tonconnect-manifest.json', // Ensure this file exists at the root
-            });
-
-            tonConnectUI.setOptions({
-                actionsConfiguration: {
-                    twaReturnUrl: referralDeeplinkBase // Set your bot's TWA deep link here
-                }
-            });
-            
-            tonConnectUI.onStatusChange(async wallet => {
-                if (wallet) {
-                    console.log("TON Connect UI: Wallet connected:", wallet.account.address);
-                    document.getElementById('connect-btn').textContent = 'Wallet Connected';
-                    document.getElementById('connect-btn').disabled = true;
-                    
-                    // Optionally update user's wallet address in Firebase if needed
-                    // await updateUserWalletAddress(wallet.account.address);
-                } else {
-                    console.log("TON Connect UI: Wallet disconnected.");
-                    document.getElementById('connect-btn').textContent = 'Connect TON Wallet';
-                    document.getElementById('connect-btn').disabled = false;
-                }
-            });
-        }
-
-        // --- Initial App Load ---
+        // --- Initial Page Load ---
+        // Ensure the app initializes and then set the default page
         if (currentUser && !initialized) {
-            initializeAppCore();
+            initializeAppCore().then(() => {
+                const homeNavButton = document.querySelector('.nav-item[onclick*="home-page"]');
+                if (homeNavButton) homeNavButton.click();
+            });
         } else if (!currentUser) {
-            console.error("User not initialized. Cannot start app core.");
-            showModal("Login Error", "Please open this application within the Telegram bot.", () => {
+            console.error("User not initialized.");
+            showModal("Error", "Please open this application within the Telegram bot.", () => {
                 if (tg) tg.close();
-            }, true); // Show OK button only
-        }
-
-        // Automatically activate the Home page on load
-        document.addEventListener('DOMContentLoaded', () => {
-            const homeNavButton = document.querySelector('.nav-item[onclick*="home-page"]');
-            if (homeNavButton) {
-                homeNavButton.click();
+            });
+        } else {
+             // App was already initialized, ensure correct page is active
+            const activeNavButton = document.querySelector('.nav-item.active');
+            if (activeNavButton) {
+                const activePageId = activeNavButton.getAttribute('onclick').match(/showPage\('([^']+)'/)[1];
+                document.getElementById(activePageId).classList.add('active');
             }
-        });
+        }
     </script>
-</body>
 </html>
