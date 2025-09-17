@@ -1,0 +1,11 @@
+{
+  "url": "https://yourdomain.com",
+  "name": "Your App Name",
+  "iconUrl": "https://yourdomain.com/icon.png",
+  "termsOfUseUrl": "https://yourdomain.com/terms",
+  "privacyPolicyUrl": "https://yourdomain.com/privacy",
+  "manifestVersion": 1,
+  "bridge": {
+    "url": "https://bridge.tonapi.io/bridge"
+  }
+}
